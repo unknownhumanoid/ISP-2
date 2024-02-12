@@ -140,6 +140,7 @@ def depositToUserBalance(user: User, pelicoins: float, accountType: str):
 
 
 async def main(page: ft.Page) -> None:
+    await micropip.install("sqlite3")
     page.title = "Pelicoin Banking"
     page.fonts = {
         "Kayak Light": "fonts/Kayak Sans Light.otf",
