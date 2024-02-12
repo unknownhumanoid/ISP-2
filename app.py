@@ -1,9 +1,12 @@
 import flet as ft
+import micropip
 
 import views
 
 
 async def main(page: ft.Page) -> None:
+    micropip.install("sqlite3")
+
     page.title = "Pelicoin Banking"
     page.fonts = {
         "Kayak Light": "fonts/Kayak Sans Light.otf",
