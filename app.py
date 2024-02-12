@@ -33,4 +33,8 @@ async def main(page: ft.Page) -> None:
 
 
 # app = flet_fastapi.app(main, assets_dir="/Users/lucaslevine/Documents/ISP 2/assets")
-app = ft.app(main, assets_dir=r"/Users/lucaslevine/Documents/ISP 2/assets")
+app = ft.app(
+    main,
+    view=ft.AppView.WEB_BROWSER,
+    assets_dir=r"/Users/lucaslevine/Documents/ISP 2/assets",
+)
