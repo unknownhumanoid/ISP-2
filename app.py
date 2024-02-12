@@ -1,5 +1,4 @@
 import flet as ft
-import flet_fastapi
 
 import views
 
