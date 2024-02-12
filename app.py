@@ -1,5 +1,6 @@
 import flet as ft
 import sqlite3
+import micropip
 
 FIELD_WIDTH = 325
 MAIN_BUTTON_WIDTH = 150
