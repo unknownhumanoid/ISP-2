@@ -5,7 +5,7 @@ import views
 
 
 async def main(page: ft.Page) -> None:
-    micropip.install("sqlite3")
+    await micropip.install("sqlite3")
 
     page.title = "Pelicoin Banking"
     page.fonts = {
