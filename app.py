@@ -1,17 +1,18 @@
 import flet as ft
-import micropip
-
-import views
 
 
 async def main(page: ft.Page) -> None:
+    import micropip
+
     await micropip.install("sqlite3")
+
     page.title = "Pelicoin Banking"
     page.fonts = {
         "Kayak Light": "fonts/Kayak Sans Light.otf",
         "Kayak Regular": "fonts/Kayak Sans Regular.otf",
         "Kayak Bold": "fonts/Kayak Sans Bold.otf",
     }
+    import views
 
     routeToView = {
         "/login": views.getLogInView,
