@@ -1,4 +1,7 @@
-import sqlite3
+import micropip
+
+micropip.install("sqlite3")
+import _sqlite3 as sqlite3
 
 # connection = sqlite3.connect("assets/data/users.db")
 # cursor = connection.cursor()
