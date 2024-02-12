@@ -25,12 +25,12 @@ async def getLogInView(page: ft.Page):
         emailValue, passwordValue = email.value, password.value
         account = user.Account(emailValue, passwordValue)
 
-        u = user.fetchUserByEmail(emailValue)
-        if u and user.isValidUserLogin(account):
-            page.session.set("user", u)
-            await page.go_async("/accounts")
-        else:
-            print("Invalid Account Details!")
+        # u = user.fetchUserByEmail(emailValue)
+        # if u and user.isValidUserLogin(account):
+        # page.session.set("user", u)
+        # await page.go_async("/accounts")
+        # else:
+        #     print("Invalid Account Details!")
 
     logInButton = ft.ElevatedButton(
         text="Log In",
