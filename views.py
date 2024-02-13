@@ -629,3 +629,8 @@ async def getRetirementView(page: ft.Page):
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
     )
+
+
+async def getAdminView(page: ft.Page):
+    usrStrs = [ft.Text(str(user)) for user in user.fetchUsers()]
+    return ft.View("/admin", usrStrs)

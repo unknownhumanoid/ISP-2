@@ -21,6 +21,7 @@ async def main(page: ft.Page) -> None:
         "/accounts/current": views.getCurrentView,
         "/accounts/education": views.getEducationView,
         "/accounts/retirement": views.getRetirementView,
+        "/admin": views.getAdminView,
     }
 
     async def changeRoute(e: ft.RouteChangeEvent):
