@@ -121,7 +121,7 @@ def isValidUserLogin(account: Account) -> bool:
 
 def appendUser(user: User):
     connection, cursor = openConnection()
-    sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current["cash"]}, {user.current["treasuryBills"]}, {user.current["stockIndex"]}, {user.education["treasuryBills"]}, {user.education["stockIndex"]}, {user.retirement["treasuryBills"]}, {user.retirement["stockIndex"]})"
+    sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current['cash']}, {user.current['treasuryBills']}, {user.current['stockIndex']}, {user.education['treasuryBills']}, {user.education['stockIndex']}, {user.retirement['treasuryBills']}, {user.retirement['stockIndex']})"
     cursor.execute(sqlInsert)
     connection.commit()
     closeConnection(connection, cursor)
