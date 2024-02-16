@@ -33,20 +33,37 @@ class User(Account):
         dorm: str,
     ) -> None:
         super().__init__(email, password)
-        self.currentCash = currentCash
-        self.currentTreasuryBills = currentTreasuryBills
-        self.currentStockIndex = currentStockIndex
-        self.educationTreasuryBills = educationTreasuryBills
-        self.educationStockIndex = educationStockIndex
-        self.retirementTreasuryBills = retirementTreasuryBills
-        self.retirementStockIndex = retirementStockIndex
         self.name = name
         self.gradYear = gradYear
         self.isBoarder = isBoarder
         self.dorm = dorm
+        self.current = {
+            "cash": currentCash,
+            "treasuryBills": currentTreasuryBills,
+            "stockIndex": currentStockIndex,
+        }
+        self.education = {
+            "treasuryBills": educationTreasuryBills,
+            "stockIndex": educationStockIndex,
+        }
+        self.retirement = {
+            "treasuryBills": retirementTreasuryBills,
+            "stockIndex": retirementStockIndex,
+        }
 
     def __repr__(self) -> str:
         return f"Account: {self.email, self.password} || User: {self.name} ({self.gradYear}), {'Boarder' if self.isBoarder else 'Day'} in {self.dorm}"
+
+
+class Admin(Account):
+    def __init__(
+        self,
+        email: str,
+        password: str,
+        name: str,
+    ) -> None:
+        super().__init__(email, password)
+        self.name = name
 
 
 def openConnection():
@@ -56,7 +73,7 @@ def openConnection():
 
 
 def closeConnection(connection: sqlite3.Connection, cursor: sqlite3.Cursor):
-    cursor.close
+    cursor.close()
     connection.close()
 
 

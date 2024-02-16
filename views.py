@@ -43,8 +43,18 @@ async def getLogInView(page: ft.Page):
 
     signUpButton = ft.OutlinedButton(
         text="Sign Up",
-        width=styles.SECONDARY_BUTTON_WIDTH,
+        width=styles.MAIN_BUTTON_WIDTH - 20,
         on_click=signUpButtonOnClick,
+    )
+
+    adminButton = ft.Container(
+        ft.TextButton(
+            text="Admin?",
+            width=styles.MAIN_BUTTON_WIDTH / 2,
+            on_click=logInButtonOnClick,
+            scale=0.75,
+        ),
+        padding=ft.padding.all(5),
     )
 
     return ft.View(
@@ -52,6 +62,7 @@ async def getLogInView(page: ft.Page):
         controls=[
             ft.AppBar(
                 title=ft.Text("Pelicoin Banking"),
+                actions=[adminButton],
                 center_title=True,
                 toolbar_height=50,
             ),
@@ -446,7 +457,7 @@ async def getAccountsView(page: ft.Page):
                 center_title=True,
                 toolbar_height=50,
             ),
-            ft.Row(
+            ft.ResponsiveRow(
                 [
                     ft.Column(
                         [
@@ -461,19 +472,20 @@ async def getAccountsView(page: ft.Page):
                                 width=styles.FIELD_WIDTH,
                                 border_radius=ft.border_radius.all(10),
                             ),
-                            balancePieChart,
-                            # ft.Container(
-                            #     bgcolor=ft.colors.ON_INVERSE_SURFACE,
-                            #     height=5,
-                            #     width=styles.FIELD_WIDTH,
-                            #     border_radius=ft.border_radius.all(10),
-                            # ),
-                            # transferCard,
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        col={"md": 6},
+                    ),
+                    ft.Column(
+                        [
+                            balancePieChart,
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        col={"md": 6},
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                columns=12,
             ),
         ],
         vertical_alignment=ft.MainAxisAlignment.SPACE_AROUND,
