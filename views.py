@@ -482,6 +482,7 @@ async def getAccountsView(page: ft.Page):
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         col={"md": 6},
+                        expand=True,
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
