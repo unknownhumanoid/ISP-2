@@ -35,7 +35,6 @@ async def main(page: ft.Page) -> None:
     page.on_route_change = changeRoute
 
     await page.go_async("/login")
-    # await page.go_async("/admin")
 
 
 app = ft.app(main, assets_dir="/Users/lucaslevine/Documents/ISP 2/assets")

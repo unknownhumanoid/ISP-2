@@ -47,11 +47,22 @@ async def getLogInView(page: ft.Page):
         on_click=signUpButtonOnClick,
     )
 
+    async def adminButtonOnClick(e: ft.ControlEvent):
+        emailValue, passwordValue = email.value, password.value
+        account = user.Account(emailValue, passwordValue)
+
+        a = user.fetchAdminByEmail(emailValue)
+        if a and user.isValidAdminLogin(account):
+            page.session.set("admin", a)
+            await page.go_async("/admin")
+        else:
+            print("Invalid Account Details!")
+
     adminButton = ft.Container(
         ft.TextButton(
             text="Admin?",
             width=styles.MAIN_BUTTON_WIDTH / 2,
-            on_click=logInButtonOnClick,
+            on_click=adminButtonOnClick,
             scale=0.75,
         ),
         padding=ft.padding.all(5),
@@ -220,30 +231,17 @@ async def getSignUpView(page: ft.Page):
 
 
 async def getAccountsView(page: ft.Page):
-    currentUser = page.session.get("user")
-    accountBalances = user.fetchUserBalances(currentUser)
-    (
-        currentCash,
-        currentTreasuryBills,
-        currentStockIndex,
-        educationTreasuryBills,
-        educationStockIndex,
-        retirementTreasuryBills,
-        retirementStockIndex,
-    ) = (
-        currentUser.currentCash,
-        currentUser.currentTreasuryBills,
-        currentUser.currentStockIndex,
-        currentUser.educationTreasuryBills,
-        currentUser.educationStockIndex,
-        currentUser.retirementTreasuryBills,
-        currentUser.retirementStockIndex,
-    ) = accountBalances
+    currentUser: user.User = page.session.get("user")
+    accountBalances = {
+        "current": currentUser.current,
+        "education": currentUser.education,
+        "retirement": currentUser.retirement,
+    }
 
-    currentBalance = sum([currentCash, currentTreasuryBills, currentStockIndex])
-    educationBalance = sum([educationTreasuryBills, educationStockIndex])
-    retirementBalance = sum([retirementTreasuryBills, retirementStockIndex])
-    balance = sum(accountBalances)
+    currentBalance = sum(accountBalances.get("current").values())
+    educationBalance = sum(accountBalances.get("education").values())
+    retirementBalance = sum(accountBalances.get("retirement").values())
+    balance = currentBalance + educationBalance + retirementBalance
     balanceText = ft.Text(
         value=f"{balance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
@@ -474,14 +472,14 @@ async def getAccountsView(page: ft.Page):
                             ),
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        col={"md": 6},
+                        col={"sm": 8, "md": 6},
                     ),
                     ft.Column(
                         [
                             balancePieChart,
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        col={"md": 6},
+                        col={"sm": 8, "md": 6},
                         expand=True,
                     ),
                 ],
@@ -645,5 +643,108 @@ async def getRetirementView(page: ft.Page):
 
 
 async def getAdminView(page: ft.Page):
-    usrStrs = [ft.Text(str(user)) for user in user.fetchUsers()]
-    return ft.View("/admin", usrStrs)
+    allUsers = user.fetchUsers()
+
+    async def selectChanged(e: ft.ControlEvent):
+        e.control.selected = not e.control.selected
+        await namesTable.update_async()
+
+    allNameRows = [
+        ft.DataRow(
+            cells=[
+                ft.DataCell(ft.Text(u.name)),
+                ft.DataCell(ft.Text(str(sum(u.current.values())))),
+                ft.DataCell(ft.Text(str(sum(u.education.values())))),
+                ft.DataCell(ft.Text(str(sum(u.education.values())))),
+            ],
+            on_select_changed=selectChanged,
+        )
+        for u in allUsers
+    ]
+
+    async def nameSearchOnChange(e: ft.ControlEvent):
+        namesTable.rows = [
+            nameRow
+            for nameRow in allNameRows
+            if e.control.value.lower() in nameRow.cells[0].content.value.lower()
+        ]
+        await namesTable.update_async()
+
+    nameSearch = ft.TextField(
+        label="Name",
+        width=styles.FIELD_WIDTH,
+        border=ft.InputBorder.OUTLINE,
+        filled=True,
+        text_style=styles.TextFieldStyle,
+        on_change=nameSearchOnChange,
+    )
+
+    namesTable = ft.DataTable(
+        columns=[
+            ft.DataColumn(ft.Text("Name")),
+            ft.DataColumn(ft.Text("Current"), numeric=True),
+            ft.DataColumn(ft.Text("Education"), numeric=True),
+            ft.DataColumn(ft.Text("Retirement"), numeric=True),
+        ],
+        rows=allNameRows,
+        width=styles.FIELD_WIDTH * 2,
+        column_spacing=25,
+        show_checkbox_column=True,
+    )
+
+    balancesTile = ft.ExpansionTile(
+        title=ft.Row(
+            [
+                ft.Icon(ft.icons.ATTACH_MONEY),
+                ft.Text("Balances", size=20),
+            ],
+        ),
+        subtitle=ft.Text("Add, substract, set."),
+        controls=[
+            ft.TextField(label="Add"),
+            ft.Divider(),
+            ft.TextField(label="Subtract"),
+            ft.Divider(),
+            ft.TextField(label="Set"),
+        ],
+        controls_padding=10,
+    )
+
+    ratesTile = ft.ExpansionTile(
+        title=ft.Row(
+            [
+                ft.Icon(ft.icons.AREA_CHART),
+                ft.Text("Rates", size=24),
+            ],
+        ),
+        subtitle=ft.Text("Set earning rates."),
+        controls=[],
+    )
+
+    controlPanelColumn = ft.Column(
+        [balancesTile, ratesTile],
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        expand=True,
+    )
+
+    return ft.View(
+        "/admin",
+        [
+            ft.ResponsiveRow(
+                [
+                    ft.Column(
+                        [nameSearch, namesTable],
+                        col=8,
+                    ),
+                    ft.Container(
+                        controlPanelColumn,
+                        bgcolor=ft.colors.ON_INVERSE_SURFACE,
+                        height=page.window_height - 48.5,
+                        col=4,
+                        padding=10,
+                        border_radius=10,
+                    ),
+                ]
+            ),
+        ],
+    )

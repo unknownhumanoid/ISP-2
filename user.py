@@ -20,6 +20,10 @@ class User(Account):
         self,
         email: str,
         password: str,
+        name: str,
+        gradYear: int,
+        isBoarder: int,
+        dorm: str,
         currentCash: float,
         currentTreasuryBills: float,
         currentStockIndex: float,
@@ -27,10 +31,6 @@ class User(Account):
         educationStockIndex: float,
         retirementTreasuryBills: float,
         retirementStockIndex: float,
-        name: str,
-        gradYear: int,
-        isBoarder: int,
-        dorm: str,
     ) -> None:
         super().__init__(email, password)
         self.name = name
@@ -66,7 +66,10 @@ class Admin(Account):
         self.name = name
 
 
-def openConnection():
+# USER
+
+
+def openUsersConnection():
     connection = sqlite3.connect("assets/data/users.db")
     cursor = connection.cursor()
     return connection, cursor
@@ -78,14 +81,14 @@ def closeConnection(connection: sqlite3.Connection, cursor: sqlite3.Cursor):
 
 
 def fetchUsers() -> list[User]:
-    connection, cursor = openConnection()
+    connection, cursor = openUsersConnection()
     rows = cursor.execute("SELECT * FROM users").fetchall()
     closeConnection(connection, cursor)
     return [User(*row) for row in rows]
 
 
 def fetchUserByEmail(email: str) -> User | None:
-    connection, cursor = openConnection()
+    connection, cursor = openUsersConnection()
     sqlSelectUser = "SELECT * FROM users WHERE email = ?"
     rows = cursor.execute(sqlSelectUser, (email,)).fetchall()
     closeConnection(connection, cursor)
@@ -93,23 +96,15 @@ def fetchUserByEmail(email: str) -> User | None:
         return User(*rows[0]) if rows else None
 
 
-def fetchUserBalances(user: User) -> tuple:
-    connection, cursor = openConnection()
-    sqlSelectBalances = "SELECT currentCash, currentTreasuryBills, currentStockIndex, educationTreasuryBills, educationStockIndex, retirementTreasuryBills, retirementStockIndex FROM users WHERE email = ?"
-    rows = cursor.execute(sqlSelectBalances, (user.email,)).fetchall()
-    closeConnection(connection, cursor)
-    return rows[0]
-
-
 def fetchAccountsDict() -> dict[str, str]:
-    connection, cursor = openConnection()
+    connection, cursor = openUsersConnection()
     rows = cursor.execute("SELECT email, password FROM users").fetchall()
     closeConnection(connection, cursor)
     return dict(rows)
 
 
 def isValidUserLogin(account: Account) -> bool:
-    connection, cursor = openConnection()
+    connection, cursor = openUsersConnection()
     selectPassword = "SELECT password FROM users WHERE email = ?"
     userPassword = cursor.execute(selectPassword, (account.email,)).fetchall()
     closeConnection(connection, cursor)
@@ -120,29 +115,57 @@ def isValidUserLogin(account: Account) -> bool:
 
 
 def appendUser(user: User):
-    connection, cursor = openConnection()
+    connection, cursor = openUsersConnection()
     sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current['cash']}, {user.current['treasuryBills']}, {user.current['stockIndex']}, {user.education['treasuryBills']}, {user.education['stockIndex']}, {user.retirement['treasuryBills']}, {user.retirement['stockIndex']})"
     cursor.execute(sqlInsert)
     connection.commit()
     closeConnection(connection, cursor)
 
 
-def transferCoins(user: User, pelicoins: float, fromAccount: str, toAccount: str):
-    depositToUserBalance(user, -pelicoins, fromAccount)
-    depositToUserBalance(user, pelicoins, toAccount)
+# def transferCoins(user: User, pelicoins: float, fromAccount: str, toAccount: str):
+#     depositToUserBalance(user, -pelicoins, fromAccount)
+#     depositToUserBalance(user, pelicoins, toAccount)
 
 
-def depositToUserBalance(user: User, pelicoins: float, accountType: str):
-    currentUserBalances = fetchUserBalances(user)
-    currentChecking, currentSavings = currentUserBalances
+# def depositToUserBalance(email: str, pelicoins: float, accountType: str):
+#     currentUser = fetchUserByEmail(email)
 
-    typeToBalance = {"checking": currentChecking, "savings": currentSavings}
+#     typeToBalance = {"checking": currentChecking, "savings": currentSavings}
 
-    connection, cursor = openConnection()
-    sqlUpdateBalance = f"UPDATE users SET {accountType} = ? WHERE email = ?"
-    cursor.execute(
-        sqlUpdateBalance,
-        (typeToBalance.get(accountType) + pelicoins, user.email),
-    )
-    connection.commit()
+#     connection, cursor = openUsersConnection()
+#     sqlUpdateBalance = f"UPDATE users SET {accountType} = ? WHERE email = ?"
+#     cursor.execute(
+#         sqlUpdateBalance,
+#         (typeToBalance.get(accountType) + pelicoins, user.email),
+#     )
+#     connection.commit()
+#     closeConnection(connection, cursor)
+
+
+# ADMIN
+
+
+def openAdminsConnection():
+    connection = sqlite3.connect("assets/data/admins.db")
+    cursor = connection.cursor()
+    return connection, cursor
+
+
+def fetchAdminByEmail(email: str) -> Admin | None:
+    connection, cursor = openAdminsConnection()
+    sqlSelectAdmin = "SELECT * FROM admins WHERE email = ?"
+    rows = cursor.execute(sqlSelectAdmin, (email,)).fetchall()
     closeConnection(connection, cursor)
+    if rows:
+        return Admin(*rows[0]) if rows else None
+
+
+def isValidAdminLogin(account: Account) -> bool:
+    connection, cursor = openAdminsConnection()
+    selectPassword = "SELECT password FROM admins WHERE email = ?"
+    adminPassword = cursor.execute(selectPassword, (account.email,)).fetchall()
+    closeConnection(connection, cursor)
+    try:
+        return account.password == adminPassword[0][0]
+    except IndexError:
+        return False
