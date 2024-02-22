@@ -739,7 +739,6 @@ async def getAdminView(page: ft.Page):
                     ft.Container(
                         controlPanelColumn,
                         bgcolor=ft.colors.ON_INVERSE_SURFACE,
-                        height=page.window_height - 48.5,
                         col=4,
                         padding=10,
                         border_radius=10,
