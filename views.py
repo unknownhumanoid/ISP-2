@@ -727,9 +727,18 @@ async def getAdminView(page: ft.Page):
         expand=True,
     )
 
+    async def backOnClick(e: ft.ControlEvent):
+        await page.go_async("/login")
+
     return ft.View(
         "/admin",
         [
+            ft.AppBar(
+                leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=backOnClick),
+                title=ft.Text("Pelicoin Admin Panel"),
+                center_title=True,
+                toolbar_height=50,
+            ),
             ft.ResponsiveRow(
                 [
                     ft.Column(
