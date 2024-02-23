@@ -46,3 +46,5 @@ async def main(page: ft.Page) -> None:
 
 
 app = ft.app(main, assets_dir="assets", view=appView, web_renderer=ft.WebRenderer.HTML)
+
+# flet publish app.py -a assets --app-name "Pelicoin Banking" --app-short-name PCB --web-renderer html
