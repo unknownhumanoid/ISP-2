@@ -1,10 +1,12 @@
 import flet as ft
+import sys
 
 
 async def main(page: ft.Page) -> None:
-    import micropip
+    if sys.platform == "emscripten":
+        import micropip
 
-    await micropip.install("sqlite3")
+        await micropip.install("sqlite3")
 
     page.title = "Pelicoin Banking"
     page.theme_mode = ft.ThemeMode.DARK

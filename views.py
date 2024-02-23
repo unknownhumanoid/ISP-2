@@ -653,9 +653,9 @@ async def getAdminView(page: ft.Page):
         ft.DataRow(
             cells=[
                 ft.DataCell(ft.Text(u.name)),
-                ft.DataCell(ft.Text(str(sum(u.current.values())))),
-                ft.DataCell(ft.Text(str(sum(u.education.values())))),
-                ft.DataCell(ft.Text(str(sum(u.education.values())))),
+                ft.DataCell(ft.Text(f"{(sum(u.current.values())):,.2f}")),
+                ft.DataCell(ft.Text(f"{(sum(u.education.values())):,.2f}")),
+                ft.DataCell(ft.Text(f"{(sum(u.retirement.values())):,.2f}")),
             ],
             on_select_changed=selectChanged,
         )
