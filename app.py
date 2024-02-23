@@ -46,6 +46,6 @@ async def main(page: ft.Page) -> None:
 
 app = ft.app(
     main,
-    assets_dir="/Users/lucaslevine/Documents/ISP 2/assets",
+    assets_dir="assets",
     view=appView,
 )
