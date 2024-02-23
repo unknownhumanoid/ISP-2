@@ -39,16 +39,16 @@ class User(Account):
         self.dorm = dorm
         self.current = {
             "cash": currentCash,
-            "treasuryBills": currentTreasuryBills,
-            "stockIndex": currentStockIndex,
+            "treasury_bills": currentTreasuryBills,
+            "stock_index": currentStockIndex,
         }
         self.education = {
-            "treasuryBills": educationTreasuryBills,
-            "stockIndex": educationStockIndex,
+            "treasury_bills": educationTreasuryBills,
+            "stock_index": educationStockIndex,
         }
         self.retirement = {
-            "treasuryBills": retirementTreasuryBills,
-            "stockIndex": retirementStockIndex,
+            "treasury_bills": retirementTreasuryBills,
+            "stock_index": retirementStockIndex,
         }
 
     def __repr__(self) -> str:
@@ -128,26 +128,47 @@ def appendUser(user: User):
 #     depositToUserBalance(user, pelicoins, toAccount)
 
 
-def depositToUserBalance(email: str, pelicoins: float, account: str, accountType: str):
+def depositToCurrentBalance(email: str, pelicoins: float, accountType: str):
     currentUser = fetchUserByEmail(email)
 
+    fieldName = f"current{accountType[0].upper() + accountType[1:]}"
+
     connection, cursor = openUsersConnection()
-    sqlUpdateBalance = f"UPDATE users SET {account} = ? WHERE email = ?"
-    if account == "current":
-        cursor.execute(
-            sqlUpdateBalance,
-            (currentUser.current.get(accountType) + pelicoins, currentUser.email),
-        )
-    elif account == "education":
-        cursor.execute(
-            sqlUpdateBalance,
-            (currentUser.education.get(accountType) + pelicoins, currentUser.email),
-        )
-    elif account == "retirement":
-        cursor.execute(
-            sqlUpdateBalance,
-            (currentUser.retirement.get(accountType) + pelicoins, currentUser.email),
-        )
+    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
+    cursor.execute(
+        sqlUpdateBalance,
+        (currentUser.current.get(accountType) + pelicoins, currentUser.email),
+    )
+    connection.commit()
+    closeConnection(connection, cursor)
+
+
+def depositToEducationBalance(email: str, pelicoins: float, accountType: str):
+    currentUser = fetchUserByEmail(email)
+
+    fieldName = f"education{accountType[0].upper() + accountType[1:]}"
+
+    connection, cursor = openUsersConnection()
+    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
+    cursor.execute(
+        sqlUpdateBalance,
+        (currentUser.education.get(accountType) + pelicoins, currentUser.email),
+    )
+    connection.commit()
+    closeConnection(connection, cursor)
+
+
+def depositToRetirementBalance(email: str, pelicoins: float, accountType: str):
+    currentUser = fetchUserByEmail(email)
+
+    fieldName = f"retirement{accountType[0].upper() + accountType[1:]}"
+
+    connection, cursor = openUsersConnection()
+    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
+    cursor.execute(
+        sqlUpdateBalance,
+        (currentUser.retirement.get(accountType) + pelicoins, currentUser.email),
+    )
     connection.commit()
     closeConnection(connection, cursor)
 

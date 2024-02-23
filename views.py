@@ -167,6 +167,10 @@ async def getSignUpView(page: ft.Page):
             print("Password is a required field!")
             return
 
+        if user.fetchUserByEmail(emailValue):
+            print("Email already in use!")
+            return
+
         newUser = user.User(
             emailValue,
             passwordValue,
@@ -643,29 +647,28 @@ async def getRetirementView(page: ft.Page):
 
 
 async def getAdminView(page: ft.Page):
-    allUsers = user.fetchUsers()
-
     async def selectChanged(e: ft.ControlEvent):
         e.control.selected = not e.control.selected
         await namesTable.update_async()
 
-    allNameRows = [
-        ft.DataRow(
-            cells=[
-                ft.DataCell(ft.Text(u.name)),
-                ft.DataCell(ft.Text(f"{(sum(u.current.values())):,.2f}")),
-                ft.DataCell(ft.Text(f"{(sum(u.education.values())):,.2f}")),
-                ft.DataCell(ft.Text(f"{(sum(u.retirement.values())):,.2f}")),
-            ],
-            on_select_changed=selectChanged,
-        )
-        for u in allUsers
-    ]
+    async def getAllNameRows(users: list[user.User]):
+        return [
+            ft.DataRow(
+                cells=[
+                    ft.DataCell(ft.Text(u.name)),
+                    ft.DataCell(ft.Text(f"{(sum(u.current.values())):,.2f}")),
+                    ft.DataCell(ft.Text(f"{(sum(u.education.values())):,.2f}")),
+                    ft.DataCell(ft.Text(f"{(sum(u.retirement.values())):,.2f}")),
+                ],
+                on_select_changed=selectChanged,
+            )
+            for u in users
+        ]
 
     async def nameSearchOnChange(e: ft.ControlEvent):
         namesTable.rows = [
             nameRow
-            for nameRow in allNameRows
+            for nameRow in await getAllNameRows(user.fetchUsers())
             if e.control.value.lower() in nameRow.cells[0].content.value.lower()
         ]
         await namesTable.update_async()
@@ -686,10 +689,55 @@ async def getAdminView(page: ft.Page):
             ft.DataColumn(ft.Text("Education"), numeric=True),
             ft.DataColumn(ft.Text("Retirement"), numeric=True),
         ],
-        rows=allNameRows,
+        rows=await getAllNameRows(user.fetchUsers()),
         width=styles.FIELD_WIDTH * 2,
         column_spacing=25,
         show_checkbox_column=True,
+    )
+
+    async def onAddClick(e: ft.ControlEvent):
+        user.depositToCurrentBalance(
+            "test@loomis.org",
+            float(addRow.controls[0].value if addRow.controls[0].value else 0.0),
+            "cash",
+        )
+        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        await namesTable.update_async()
+
+    addRow = ft.ResponsiveRow(
+        [
+            ft.TextField(label="Add", col=10),
+            ft.IconButton(
+                ft.icons.ADD,
+                col=2,
+                on_click=onAddClick,
+            ),
+        ]
+    )
+
+    async def onSubClick(e: ft.ControlEvent):
+        user.depositToCurrentBalance(
+            "test@loomis.org",
+            -float(
+                subtractRow.controls[0].value if subtractRow.controls[0].value else 0.0
+            ),
+            "cash",
+        )
+        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        await namesTable.update_async()
+
+    subtractRow = ft.ResponsiveRow(
+        [
+            ft.TextField(label="Subtract", col=10),
+            ft.IconButton(ft.icons.MINIMIZE, col=2, on_click=onSubClick),
+        ],
+    )
+
+    setRow = ft.ResponsiveRow(
+        [
+            ft.TextField(label="Set", col=10),
+            ft.IconButton(ft.icons.ARROW_FORWARD, col=2),
+        ]
     )
 
     balancesTile = ft.ExpansionTile(
@@ -701,11 +749,11 @@ async def getAdminView(page: ft.Page):
         ),
         subtitle=ft.Text("Add, substract, set."),
         controls=[
-            ft.TextField(label="Add"),
+            addRow,
             ft.Divider(),
-            ft.TextField(label="Subtract"),
+            subtractRow,
             ft.Divider(),
-            ft.TextField(label="Set"),
+            setRow,
         ],
         controls_padding=10,
     )
