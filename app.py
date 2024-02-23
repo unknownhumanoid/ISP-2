@@ -39,4 +39,8 @@ async def main(page: ft.Page) -> None:
     await page.go_async("/login")
 
 
-app = ft.app(main, assets_dir="/Users/lucaslevine/Documents/ISP 2/assets")
+app = ft.app(
+    main,
+    assets_dir="/Users/lucaslevine/Documents/ISP 2/assets",
+    web_renderer=ft.WebRenderer.AUTO,
+)
