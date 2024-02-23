@@ -1,11 +1,12 @@
 import flet as ft
 import sys
 
+local = not sys.platform == "emscripten"
 appView = ft.AppView.FLET_APP
 
 
 async def main(page: ft.Page) -> None:
-    if sys.platform == "emscripten":
+    if not local:
         import micropip
 
         global appView
@@ -44,4 +45,9 @@ async def main(page: ft.Page) -> None:
     await page.go_async("/login")
 
 
-app = ft.app(main, assets_dir="assets", view=appView, web_renderer=ft.WebRenderer.HTML)
+if local:
+    app = ft.app(
+        main, assets_dir="assets", view=appView, web_renderer=ft.WebRenderer.HTML
+    )
+else:
+    app = ft.app(main)
