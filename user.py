@@ -1,4 +1,4 @@
-import _sqlite3 as sqlite3
+import sqlite3 as sqlite3
 
 # connection = sqlite3.connect("assets/data/users.db")
 # cursor = connection.cursor()

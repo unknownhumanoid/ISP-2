@@ -1,10 +1,15 @@
 import flet as ft
 import sys
 
+appView = ft.AppView.FLET_APP
+
 
 async def main(page: ft.Page) -> None:
     if sys.platform == "emscripten":
         import micropip
+
+        global appView
+        appView = ft.AppView.WEB_BROWSER
 
         await micropip.install("sqlite3")
 
@@ -42,5 +47,5 @@ async def main(page: ft.Page) -> None:
 app = ft.app(
     main,
     assets_dir="/Users/lucaslevine/Documents/ISP 2/assets",
-    web_renderer=ft.WebRenderer.AUTO,
+    view=appView,
 )
