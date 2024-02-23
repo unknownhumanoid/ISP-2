@@ -2,9 +2,9 @@ import flet as ft
 
 
 async def main(page: ft.Page) -> None:
-    import micropip
+    # import micropip
 
-    await micropip.install("sqlite3")
+    # await micropip.install("sqlite3")
 
     page.title = "Pelicoin Banking"
     page.theme_mode = ft.ThemeMode.DARK

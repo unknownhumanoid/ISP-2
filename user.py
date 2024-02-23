@@ -117,6 +117,7 @@ def isValidUserLogin(account: Account) -> bool:
 def appendUser(user: User):
     connection, cursor = openUsersConnection()
     sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current['cash']}, {user.current['treasuryBills']}, {user.current['stockIndex']}, {user.education['treasuryBills']}, {user.education['stockIndex']}, {user.retirement['treasuryBills']}, {user.retirement['stockIndex']})"
+    print(sqlInsert)
     cursor.execute(sqlInsert)
     connection.commit()
     closeConnection(connection, cursor)
@@ -127,19 +128,28 @@ def appendUser(user: User):
 #     depositToUserBalance(user, pelicoins, toAccount)
 
 
-# def depositToUserBalance(email: str, pelicoins: float, accountType: str):
-#     currentUser = fetchUserByEmail(email)
+def depositToUserBalance(email: str, pelicoins: float, account: str, accountType: str):
+    currentUser = fetchUserByEmail(email)
 
-#     typeToBalance = {"checking": currentChecking, "savings": currentSavings}
-
-#     connection, cursor = openUsersConnection()
-#     sqlUpdateBalance = f"UPDATE users SET {accountType} = ? WHERE email = ?"
-#     cursor.execute(
-#         sqlUpdateBalance,
-#         (typeToBalance.get(accountType) + pelicoins, user.email),
-#     )
-#     connection.commit()
-#     closeConnection(connection, cursor)
+    connection, cursor = openUsersConnection()
+    sqlUpdateBalance = f"UPDATE users SET {account} = ? WHERE email = ?"
+    if account == "current":
+        cursor.execute(
+            sqlUpdateBalance,
+            (currentUser.current.get(accountType) + pelicoins, currentUser.email),
+        )
+    elif account == "education":
+        cursor.execute(
+            sqlUpdateBalance,
+            (currentUser.education.get(accountType) + pelicoins, currentUser.email),
+        )
+    elif account == "retirement":
+        cursor.execute(
+            sqlUpdateBalance,
+            (currentUser.retirement.get(accountType) + pelicoins, currentUser.email),
+        )
+    connection.commit()
+    closeConnection(connection, cursor)
 
 
 # ADMIN

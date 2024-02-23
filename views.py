@@ -170,17 +170,17 @@ async def getSignUpView(page: ft.Page):
         newUser = user.User(
             emailValue,
             passwordValue,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
             nameValue,
             gradYearValue,
             isBoarderValue,
             dormValue,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
         )
         user.appendUser(newUser)
 
