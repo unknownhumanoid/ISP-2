@@ -70,7 +70,7 @@ class Admin(Account):
 
 
 def openUsersConnection():
-    connection = sqlite3.connect("assets/data/users.db")
+    connection = sqlite3.connect("data/users.db")
     cursor = connection.cursor()
     return connection, cursor
 
@@ -156,7 +156,7 @@ def depositToUserBalance(email: str, pelicoins: float, account: str, accountType
 
 
 def openAdminsConnection():
-    connection = sqlite3.connect("assets/data/admins.db")
+    connection = sqlite3.connect("data/admins.db")
     cursor = connection.cursor()
     return connection, cursor
 
