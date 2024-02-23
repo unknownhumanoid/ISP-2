@@ -250,7 +250,7 @@ async def getAccountsView(page: ft.Page):
     )
 
     pelicoin = ft.Image(
-        src="/images/peli.png",
+        src="images/peli.png",
         width=200,
         height=200,
         fit=ft.ImageFit.CONTAIN,
