@@ -651,14 +651,91 @@ async def getAdminView(page: ft.Page):
         e.control.selected = not e.control.selected
         await namesTable.update_async()
 
-    async def getAllNameRows(users: list[user.User]):
+    async def getAllNameRows(users: list[user.User], sortBy: str | None = None):
+        match sortBy:
+            case "name":
+                users.sort(key=lambda u: u.name, reverse=namesTable.sort_ascending)
+            case "current":
+                users.sort(
+                    key=lambda u: sum(u.current.values()),
+                    reverse=namesTable.sort_ascending,
+                )
+            case "education":
+                users.sort(
+                    key=lambda u: sum(u.education.values()),
+                    reverse=namesTable.sort_ascending,
+                )
+            case "retirement":
+                users.sort(
+                    key=lambda u: sum(u.retirement.values()),
+                    reverse=namesTable.sort_ascending,
+                )
+            case "year":
+                users.sort(
+                    key=lambda u: u.gradYear,
+                    reverse=namesTable.sort_ascending,
+                )
+
         return [
             ft.DataRow(
                 cells=[
                     ft.DataCell(ft.Text(u.name)),
-                    ft.DataCell(ft.Text(f"{(sum(u.current.values())):,.2f}")),
-                    ft.DataCell(ft.Text(f"{(sum(u.education.values())):,.2f}")),
-                    ft.DataCell(ft.Text(f"{(sum(u.retirement.values())):,.2f}")),
+                    ft.DataCell(
+                        ft.Column(
+                            [
+                                ft.Text(
+                                    f"{(sum(u.current.values())):,.2f}",
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                                ft.Text(
+                                    str(u.current.values())[13:-2],
+                                    size=10,
+                                    weight=ft.FontWeight.W_100,
+                                ),
+                            ],
+                            spacing=0,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        )
+                    ),
+                    ft.DataCell(
+                        ft.Column(
+                            [
+                                ft.Text(
+                                    f"{(sum(u.education.values())):,.2f}",
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                                ft.Text(
+                                    str(u.education.values())[13:-2],
+                                    size=10,
+                                    weight=ft.FontWeight.W_100,
+                                ),
+                            ],
+                            spacing=0,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        )
+                    ),
+                    ft.DataCell(
+                        ft.Column(
+                            [
+                                ft.Text(
+                                    f"{(sum(u.retirement.values())):,.2f}",
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                                ft.Text(
+                                    str(u.retirement.values())[13:-2],
+                                    size=10,
+                                    weight=ft.FontWeight.W_100,
+                                ),
+                            ],
+                            spacing=0,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        )
+                    ),
+                    ft.DataCell(ft.Text(u.gradYear)),
+                    ft.DataCell(ft.Text(u.email), visible=False),
                 ],
                 on_select_changed=selectChanged,
             )
@@ -682,31 +759,158 @@ async def getAdminView(page: ft.Page):
         on_change=nameSearchOnChange,
     )
 
+    def onSortFactory(sortBy: str):
+        async def new(e: ft.ControlEvent):
+            namesTable.rows = await getAllNameRows(user.fetchUsers(), sortBy)
+            namesTable.sort_ascending = not namesTable.sort_ascending
+            match sortBy:
+                case "name":
+                    namesTable.sort_column_index = 0
+                case "current":
+                    namesTable.sort_column_index = 1
+                case "education":
+                    namesTable.sort_column_index = 2
+                case "retirement":
+                    namesTable.sort_column_index = 3
+                case "year":
+                    namesTable.sort_column_index = 4
+            await namesTable.update_async()
+
+        return new
+
     namesTable = ft.DataTable(
         columns=[
-            ft.DataColumn(ft.Text("Name")),
-            ft.DataColumn(ft.Text("Current"), numeric=True),
-            ft.DataColumn(ft.Text("Education"), numeric=True),
-            ft.DataColumn(ft.Text("Retirement"), numeric=True),
+            ft.DataColumn(
+                ft.Text("Name"),
+                on_sort=onSortFactory("name"),
+            ),
+            ft.DataColumn(
+                ft.Text("Current"), numeric=True, on_sort=onSortFactory("current")
+            ),
+            ft.DataColumn(
+                ft.Text("Education"), numeric=True, on_sort=onSortFactory("education")
+            ),
+            ft.DataColumn(
+                ft.Text("Retirement"), numeric=True, on_sort=onSortFactory("retirement")
+            ),
+            ft.DataColumn(ft.Text("Year"), numeric=True, on_sort=onSortFactory("year")),
         ],
         rows=await getAllNameRows(user.fetchUsers()),
         width=styles.FIELD_WIDTH * 2,
         column_spacing=25,
         show_checkbox_column=True,
+        sort_column_index=0,
+        sort_ascending=False,
     )
 
+    accountLabel = ft.Text("Current", size=16, weight=ft.FontWeight.W_500)
+
+    async def accountChanged(e: ft.ControlEvent):
+        if e.control.value == 1:
+            accountLabel.value = "Current"
+            accountTypeLabel.value = "Cash"
+            accountTypeSlider.min = 1
+            accountTypeSlider.value = 1
+            accountTypeSlider.divisions = 2
+        elif e.control.value == 2:
+            accountLabel.value = "Education"
+            accountTypeLabel.value = "Treasury Bills"
+            accountTypeSlider.min = 2
+            accountTypeSlider.value = 2
+            accountTypeSlider.divisions = 1
+        else:
+            accountLabel.value = "Retirement"
+            accountTypeLabel.value = "Treasury Bills"
+            accountTypeSlider.min = 2
+            accountTypeSlider.value = 2
+            accountTypeSlider.divisions = 1
+
+        await accountLabel.update_async()
+        await accountTypeSlider.update_async()
+        await accountTypeLabel.update_async()
+
+    accountSlider = ft.Slider(
+        min=1,
+        max=3,
+        divisions=2,
+        height=20,
+        on_change=accountChanged,
+    )
+
+    accountTypeLabel = ft.Text("Cash", size=13, weight=ft.FontWeight.NORMAL)
+
+    async def accountTypeChanged(e: ft.ControlEvent):
+        if e.control.value == 1:
+            accountTypeLabel.value = "Cash"
+        elif e.control.value == 2:
+            accountTypeLabel.value = "Treasury Bills"
+        else:
+            accountTypeLabel.value = "Index Fund"
+
+        await accountTypeLabel.update_async()
+
+    accountTypeSlider = ft.Slider(
+        min=1,
+        max=3,
+        divisions=2,
+        height=20,
+        on_change=accountTypeChanged,
+    )
+
+    accountLabeledSlider = ft.Container(
+        ft.Column(
+            [
+                ft.Row(
+                    [
+                        accountLabel,
+                        ft.Text("|"),
+                        accountTypeLabel,
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                accountSlider,
+                accountTypeSlider,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        padding=ft.padding.all(10),
+        bgcolor=ft.colors.GREY_700,
+        border_radius=25,
+    )
+
+    async def formatNumberOnBlur(e: ft.ControlEvent):
+        e.control.value = f"{float(e.control.value):,.2f}" if e.control.value else ""
+        await e.control.update_async()
+
     async def onAddClick(e: ft.ControlEvent):
-        user.depositToCurrentBalance(
-            "test@loomis.org",
-            float(addRow.controls[0].value if addRow.controls[0].value else 0.0),
-            "cash",
-        )
+        for row in namesTable.rows:
+            if row.selected:
+                user.depositToBalance(
+                    row.cells[-1].content.value,
+                    float(
+                        addRow.controls[0].value.replace(",", "")
+                        if addRow.controls[0].value
+                        else 0.0
+                    ),
+                    accountLabel.value,
+                    f"{accountTypeLabel.value}",
+                )
         namesTable.rows = await getAllNameRows(user.fetchUsers())
         await namesTable.update_async()
 
     addRow = ft.ResponsiveRow(
         [
-            ft.TextField(label="Add", col=10),
+            ft.TextField(
+                label="Add",
+                col=10,
+                input_filter=ft.InputFilter(
+                    regex_string=r"^\d+(\.\d*)?$",
+                    allow=True,
+                    replacement_string="",
+                ),
+                on_blur=formatNumberOnBlur,
+            ),
             ft.IconButton(
                 ft.icons.ADD,
                 col=2,
@@ -716,27 +920,68 @@ async def getAdminView(page: ft.Page):
     )
 
     async def onSubClick(e: ft.ControlEvent):
-        user.depositToCurrentBalance(
-            "test@loomis.org",
-            -float(
-                subtractRow.controls[0].value if subtractRow.controls[0].value else 0.0
-            ),
-            "cash",
-        )
+        for row in namesTable.rows:
+            if row.selected:
+                user.depositToBalance(
+                    row.cells[-1].content.value,
+                    -float(
+                        subtractRow.controls[0].value.strip(",")
+                        if subtractRow.controls[0].value
+                        else 0.0
+                    ),
+                    accountLabel.value,
+                    f"{accountTypeLabel.value}",
+                )
+
         namesTable.rows = await getAllNameRows(user.fetchUsers())
         await namesTable.update_async()
 
     subtractRow = ft.ResponsiveRow(
         [
-            ft.TextField(label="Subtract", col=10),
+            ft.TextField(
+                label="Subtract",
+                col=10,
+                input_filter=ft.InputFilter(
+                    regex_string=r"^\d+(\.\d*)?$",
+                    allow=True,
+                    replacement_string="",
+                ),
+                on_blur=formatNumberOnBlur,
+            ),
             ft.IconButton(ft.icons.MINIMIZE, col=2, on_click=onSubClick),
         ],
     )
 
+    async def onSetClick(e: ft.ControlEvent):
+        for row in namesTable.rows:
+            if row.selected:
+                user.setBalance(
+                    row.cells[-1].content.value,
+                    float(
+                        setRow.controls[0].value.strip(",")
+                        if setRow.controls[0].value
+                        else 0.0
+                    ),
+                    accountLabel.value,
+                    f"{accountTypeLabel.value}",
+                )
+
+        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        await namesTable.update_async()
+
     setRow = ft.ResponsiveRow(
         [
-            ft.TextField(label="Set", col=10),
-            ft.IconButton(ft.icons.ARROW_FORWARD, col=2),
+            ft.TextField(
+                label="Set",
+                col=10,
+                input_filter=ft.InputFilter(
+                    regex_string=r"^\d+(\.\d*)?$",
+                    allow=True,
+                    replacement_string="",
+                ),
+                on_blur=formatNumberOnBlur,
+            ),
+            ft.IconButton(ft.icons.ARROW_FORWARD, col=2, on_click=onSetClick),
         ]
     )
 
@@ -749,6 +994,8 @@ async def getAdminView(page: ft.Page):
         ),
         subtitle=ft.Text("Add, substract, set."),
         controls=[
+            accountLabeledSlider,
+            ft.Divider(opacity=0),
             addRow,
             ft.Divider(),
             subtractRow,

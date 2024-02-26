@@ -38,17 +38,17 @@ class User(Account):
         self.isBoarder = isBoarder
         self.dorm = dorm
         self.current = {
-            "cash": currentCash,
-            "treasury_bills": currentTreasuryBills,
-            "stock_index": currentStockIndex,
+            "Cash": currentCash,
+            "Treasury Bills": currentTreasuryBills,
+            "Index Fund": currentStockIndex,
         }
         self.education = {
-            "treasury_bills": educationTreasuryBills,
-            "stock_index": educationStockIndex,
+            "Treasury Bills": educationTreasuryBills,
+            "Index Fund": educationStockIndex,
         }
         self.retirement = {
-            "treasury_bills": retirementTreasuryBills,
-            "stock_index": retirementStockIndex,
+            "Treasury Bills": retirementTreasuryBills,
+            "Index Fund": retirementStockIndex,
         }
 
     def __repr__(self) -> str:
@@ -116,9 +116,16 @@ def isValidUserLogin(account: Account) -> bool:
 
 def appendUser(user: User):
     connection, cursor = openUsersConnection()
-    sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current['cash']}, {user.current['treasuryBills']}, {user.current['stockIndex']}, {user.education['treasuryBills']}, {user.education['stockIndex']}, {user.retirement['treasuryBills']}, {user.retirement['stockIndex']})"
-    print(sqlInsert)
+    sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current['Cash']}, {user.current['Treasury Bills']}, {user.current['Index Fund']}, {user.education['Treasury Bills']}, {user.education['Index Fund']}, {user.retirement['Treasury Bills']}, {user.retirement['Index Fund']})"
     cursor.execute(sqlInsert)
+    connection.commit()
+    closeConnection(connection, cursor)
+
+
+def purgeClassYear(classYear: int):
+    connection, cursor = openUsersConnection()
+    sqlDelete = f"DELETE FROM users WHERE gradYear = {classYear};"
+    cursor.execute(sqlDelete)
     connection.commit()
     closeConnection(connection, cursor)
 
@@ -128,46 +135,35 @@ def appendUser(user: User):
 #     depositToUserBalance(user, pelicoins, toAccount)
 
 
-def depositToCurrentBalance(email: str, pelicoins: float, accountType: str):
-    currentUser = fetchUserByEmail(email)
-
-    fieldName = f"current{accountType[0].upper() + accountType[1:]}"
+def setBalance(email: str, pelicoins: float, account: str, accountType: str):
+    fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
 
     connection, cursor = openUsersConnection()
     sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
     cursor.execute(
         sqlUpdateBalance,
-        (currentUser.current.get(accountType) + pelicoins, currentUser.email),
+        (
+            pelicoins,
+            email,
+        ),
     )
     connection.commit()
     closeConnection(connection, cursor)
 
 
-def depositToEducationBalance(email: str, pelicoins: float, accountType: str):
+def depositToBalance(email: str, pelicoins: float, account: str, accountType: str):
     currentUser = fetchUserByEmail(email)
 
-    fieldName = f"education{accountType[0].upper() + accountType[1:]}"
+    fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
 
     connection, cursor = openUsersConnection()
     sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
     cursor.execute(
         sqlUpdateBalance,
-        (currentUser.education.get(accountType) + pelicoins, currentUser.email),
-    )
-    connection.commit()
-    closeConnection(connection, cursor)
-
-
-def depositToRetirementBalance(email: str, pelicoins: float, accountType: str):
-    currentUser = fetchUserByEmail(email)
-
-    fieldName = f"retirement{accountType[0].upper() + accountType[1:]}"
-
-    connection, cursor = openUsersConnection()
-    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
-    cursor.execute(
-        sqlUpdateBalance,
-        (currentUser.retirement.get(accountType) + pelicoins, currentUser.email),
+        (
+            currentUser.__getattribute__(account.lower()).get(accountType) + pelicoins,
+            currentUser.email,
+        ),
     )
     connection.commit()
     closeConnection(connection, cursor)
