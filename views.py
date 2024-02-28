@@ -2,6 +2,25 @@ import flet as ft
 import styles, user
 
 
+async def errorDialog(page: ft.Page, titleText: str, actionText: str):
+    async def onDismiss(e):
+        await e.page.close_dialog_async()
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text(titleText, text_align=ft.TextAlign.CENTER),
+        content=ft.Text(actionText, text_align=ft.TextAlign.CENTER),
+        actions=[
+            ft.TextButton("Dismiss", on_click=onDismiss),
+        ],
+        actions_alignment=ft.MainAxisAlignment.CENTER,
+    )
+    await page.show_dialog_async(dialog)
+
+
+# Views
+
+
 async def getLogInView(page: ft.Page):
     email = ft.TextField(
         label="Email",
@@ -30,7 +49,9 @@ async def getLogInView(page: ft.Page):
             page.session.set("user", u)
             await page.go_async("/accounts")
         else:
-            print("Invalid Account Details!")
+            await errorDialog(
+                page, "Invalid Account Details", "Check your email and password."
+            )
 
     logInButton = ft.ElevatedButton(
         text="Log In",
@@ -56,7 +77,9 @@ async def getLogInView(page: ft.Page):
             page.session.set("admin", a)
             await page.go_async("/admin")
         else:
-            print("Invalid Account Details!")
+            await errorDialog(
+                page, "Invalid Account Details", "Check your email and password."
+            )
 
     adminButton = ft.Container(
         ft.TextButton(
@@ -151,7 +174,11 @@ async def getSignUpView(page: ft.Page):
         dormValue = dormField.value
 
         if not nameValue or not gradYearValue:
-            print("Name and Graduation Year are required fields!")
+            await errorDialog(
+                page,
+                "Required Fields Missing",
+                "Name and Graduation Year are required fields.",
+            )
             return
 
         try:
@@ -160,15 +187,19 @@ async def getSignUpView(page: ft.Page):
             emailDomain = ""
 
         if emailDomain != "loomis.org":
-            print("Email needs to end in '@loomis.org'!")
+            await errorDialog(
+                page, "Email Invalid", "Email needs to end in '@loomis.org'."
+            )
             return
 
         if not passwordValue:
-            print("Password is a required field!")
+            await errorDialog(
+                page, "Required Fields Missing", "Password is a required field."
+            )
             return
 
         if user.fetchUserByEmail(emailValue):
-            print("Email already in use!")
+            await errorDialog(page, "Email Invalid", "This email is already in use.")
             return
 
         newUser = user.User(
@@ -188,9 +219,12 @@ async def getSignUpView(page: ft.Page):
         )
         user.appendUser(newUser)
 
-        print("Successful Account Signup!")
+        page.session.set("user", newUser)
+        await page.go_async("/accounts")
 
-        await page.go_async("/login")
+        await errorDialog(
+            page, "Successful Account Sign Up", "Welcome to Pelicoin Banking!"
+        )
 
     submitButton = ft.ElevatedButton(text="Sign Up", on_click=signUp)
 
@@ -1016,15 +1050,23 @@ async def getAdminView(page: ft.Page):
         controls=[],
     )
 
+    gradYearField = ft.TextField(
+        label="Graduation Year",
+        col=8,
+        input_filter=ft.NumbersOnlyInputFilter(),
+    )
+
+    async def purgeOnClick(e: ft.ControlEvent):
+        user.purgeClassYear(gradYearField.value)
+        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        await namesTable.update_async()
+
     purgeSeniors = ft.ResponsiveRow(
         [
-            ft.TextField(
-                label="Class",
-                col=10,
-                input_filter=ft.NumbersOnlyInputFilter,
-            ),
-            ft.TextButton("Purge", col=2, on_click=onSetClick),
-        ]
+            gradYearField,
+            ft.OutlinedButton("Purge", col=4, on_click=purgeOnClick),
+        ],
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
     miscTile = ft.ExpansionTile(
@@ -1036,6 +1078,7 @@ async def getAdminView(page: ft.Page):
         ),
         subtitle=ft.Text("Manage miscellaneous functions."),
         controls=[purgeSeniors],
+        controls_padding=10,
     )
 
     controlPanelColumn = ft.Column(

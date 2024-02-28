@@ -15,8 +15,8 @@ async def main(page: ft.Page) -> None:
         await micropip.install("sqlite3")
 
     if local:
-        page.window_width = 1280
-        page.window_height = 720
+        page.window_width, page.window_height = 1280, 720
+        await page.window_center_async()
 
     page.title = "Pelicoin Banking"
     page.theme_mode = ft.ThemeMode.DARK

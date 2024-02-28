@@ -130,11 +130,6 @@ def purgeClassYear(classYear: int):
     closeConnection(connection, cursor)
 
 
-# def transferCoins(user: User, pelicoins: float, fromAccount: str, toAccount: str):
-#     depositToUserBalance(user, -pelicoins, fromAccount)
-#     depositToUserBalance(user, pelicoins, toAccount)
-
-
 def setBalance(email: str, pelicoins: float, account: str, accountType: str):
     fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
 
