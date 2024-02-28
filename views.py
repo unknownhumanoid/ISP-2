@@ -1016,8 +1016,30 @@ async def getAdminView(page: ft.Page):
         controls=[],
     )
 
+    purgeSeniors = ft.ResponsiveRow(
+        [
+            ft.TextField(
+                label="Class",
+                col=10,
+                input_filter=ft.NumbersOnlyInputFilter,
+            ),
+            ft.TextButton("Purge", col=2, on_click=onSetClick),
+        ]
+    )
+
+    miscTile = ft.ExpansionTile(
+        title=ft.Row(
+            [
+                ft.Icon(ft.icons.MISCELLANEOUS_SERVICES),
+                ft.Text("Misc.", size=24),
+            ],
+        ),
+        subtitle=ft.Text("Manage miscellaneous functions."),
+        controls=[purgeSeniors],
+    )
+
     controlPanelColumn = ft.Column(
-        [balancesTile, ratesTile],
+        [balancesTile, ratesTile, miscTile],
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         expand=True,
     )
