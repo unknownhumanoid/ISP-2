@@ -540,24 +540,22 @@ async def getAccountsView(page: ft.Page):
 
 
 async def getCurrentView(page: ft.Page):
-    currentUser = page.session.get("user")
-    accountBalances = user.fetchUserBalances(currentUser)
-    (
-        currentCash,
-        currentTreasuryBills,
-        currentStockIndex,
-        educationTreasuryBills,
-        educationStockIndex,
-        retirementTreasuryBills,
-        retirementStockIndex,
-    ) = accountBalances
+    currentUser: user.User = page.session.get("user")
 
-    currentBalance = sum([currentCash, currentTreasuryBills, currentStockIndex])
+    currentBalance = sum(currentUser.current.values())
     currentBalanceText = ft.Text(
         value=f"{currentBalance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
         width=350,
         size=50,
+    )
+
+    currentBalanceDetailed = ft.Row(
+        [
+            ft.Text(f"Cash: {currentUser.current.get('Cash')}"),
+            ft.Text(f"Treasury Bills: {currentUser.current.get('Treasury Bills')}"),
+            ft.Text(f"Index Fund: {currentUser.current.get('Index Fund')}"),
+        ]
     )
 
     async def backOnClick(e: ft.ControlEvent):
@@ -575,7 +573,7 @@ async def getCurrentView(page: ft.Page):
             ft.Row(
                 [
                     ft.Column(
-                        [currentBalanceText],
+                        [currentBalanceText, currentBalanceDetailed],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
@@ -590,19 +588,9 @@ async def getCurrentView(page: ft.Page):
 
 
 async def getEducationView(page: ft.Page):
-    currentUser = page.session.get("user")
-    accountBalances = user.fetchUserBalances(currentUser)
-    (
-        currentCash,
-        currentTreasuryBills,
-        currentStockIndex,
-        educationTreasuryBills,
-        educationStockIndex,
-        retirementTreasuryBills,
-        retirementStockIndex,
-    ) = accountBalances
+    currentUser: user.User = page.session.get("user")
 
-    educationBalance = sum([educationTreasuryBills, educationStockIndex])
+    educationBalance = sum(currentUser.education.values())
     educationBalanceText = ft.Text(
         value=f"{educationBalance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
@@ -610,11 +598,18 @@ async def getEducationView(page: ft.Page):
         size=50,
     )
 
+    educationBalanceDetailed = ft.Row(
+        [
+            ft.Text(f"Treasury Bills: {currentUser.education.get('Treasury Bills')}"),
+            ft.Text(f"Index Fund: {currentUser.education.get('Index Fund')}"),
+        ]
+    )
+
     async def backOnClick(e: ft.ControlEvent):
         await page.go_async("/accounts")
 
     return ft.View(
-        "/accounts/education",
+        "/accounts/current",
         [
             ft.AppBar(
                 leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=backOnClick),
@@ -625,7 +620,7 @@ async def getEducationView(page: ft.Page):
             ft.Row(
                 [
                     ft.Column(
-                        [educationBalanceText],
+                        [educationBalanceText, educationBalanceDetailed],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
@@ -640,19 +635,9 @@ async def getEducationView(page: ft.Page):
 
 
 async def getRetirementView(page: ft.Page):
-    currentUser = page.session.get("user")
-    accountBalances = user.fetchUserBalances(currentUser)
-    (
-        currentCash,
-        currentTreasuryBills,
-        currentStockIndex,
-        educationTreasuryBills,
-        educationStockIndex,
-        retirementTreasuryBills,
-        retirementStockIndex,
-    ) = accountBalances
+    currentUser: user.User = page.session.get("user")
 
-    retirementBalance = sum([retirementTreasuryBills, retirementStockIndex])
+    retirementBalance = sum(currentUser.retirement.values())
     retirementBalanceText = ft.Text(
         value=f"{retirementBalance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
@@ -660,11 +645,18 @@ async def getRetirementView(page: ft.Page):
         size=50,
     )
 
+    retirementBalanceDetailed = ft.Row(
+        [
+            ft.Text(f"Treasury Bills: {currentUser.retirement.get('Treasury Bills')}"),
+            ft.Text(f"Index Fund: {currentUser.retirement.get('Index Fund')}"),
+        ]
+    )
+
     async def backOnClick(e: ft.ControlEvent):
         await page.go_async("/accounts")
 
     return ft.View(
-        "/accounts/education",
+        "/accounts/current",
         [
             ft.AppBar(
                 leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=backOnClick),
@@ -675,7 +667,7 @@ async def getRetirementView(page: ft.Page):
             ft.Row(
                 [
                     ft.Column(
-                        [retirementBalanceText],
+                        [retirementBalanceText, retirementBalanceDetailed],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
@@ -731,7 +723,10 @@ async def getAdminView(page: ft.Page):
                                     weight=ft.FontWeight.BOLD,
                                 ),
                                 ft.Text(
-                                    str(u.current.values())[13:-2],
+                                    str([f"{val:,.2f}" for val in u.current.values()])
+                                    .replace("[", "")
+                                    .replace("]", "")
+                                    .replace("'", ""),
                                     size=10,
                                     weight=ft.FontWeight.W_100,
                                 ),
@@ -749,7 +744,10 @@ async def getAdminView(page: ft.Page):
                                     weight=ft.FontWeight.BOLD,
                                 ),
                                 ft.Text(
-                                    str(u.education.values())[13:-2],
+                                    str([f"{val:,.2f}" for val in u.current.values()])
+                                    .replace("[", "")
+                                    .replace("]", "")
+                                    .replace("'", ""),
                                     size=10,
                                     weight=ft.FontWeight.W_100,
                                 ),
@@ -767,7 +765,10 @@ async def getAdminView(page: ft.Page):
                                     weight=ft.FontWeight.BOLD,
                                 ),
                                 ft.Text(
-                                    str(u.retirement.values())[13:-2],
+                                    str([f"{val:,.2f}" for val in u.current.values()])
+                                    .replace("[", "")
+                                    .replace("]", "")
+                                    .replace("'", ""),
                                     size=10,
                                     weight=ft.FontWeight.W_100,
                                 ),
@@ -1048,6 +1049,120 @@ async def getAdminView(page: ft.Page):
         controls_padding=10,
     )
 
+    accountLabelRates = ft.Text("Current", size=16, weight=ft.FontWeight.W_500)
+
+    async def accountChangedRates(e: ft.ControlEvent):
+        if e.control.value == 1:
+            accountLabelRates.value = "Current"
+            accountTypeLabelRates.value = "Cash"
+            accountTypeSliderRates.min = 1
+            accountTypeSliderRates.value = 1
+            accountTypeSliderRates.divisions = 2
+        elif e.control.value == 2:
+            accountLabelRates.value = "Education"
+            accountTypeLabelRates.value = "Treasury Bills"
+            accountTypeSliderRates.min = 2
+            accountTypeSliderRates.value = 2
+            accountTypeSliderRates.divisions = 1
+        else:
+            accountLabelRates.value = "Retirement"
+            accountTypeLabelRates.value = "Treasury Bills"
+            accountTypeSliderRates.min = 2
+            accountTypeSliderRates.value = 2
+            accountTypeSliderRates.divisions = 1
+
+        await accountLabelRates.update_async()
+        await accountTypeSliderRates.update_async()
+        await accountTypeLabelRates.update_async()
+
+    accountSliderRates = ft.Slider(
+        min=1,
+        max=3,
+        divisions=2,
+        height=20,
+        on_change=accountChangedRates,
+    )
+
+    accountTypeLabelRates = ft.Text("Cash", size=13, weight=ft.FontWeight.NORMAL)
+
+    async def accountTypeChangedRates(e: ft.ControlEvent):
+        if e.control.value == 1:
+            accountTypeLabelRates.value = "Cash"
+        elif e.control.value == 2:
+            accountTypeLabelRates.value = "Treasury Bills"
+        else:
+            accountTypeLabelRates.value = "Index Fund"
+
+        await accountTypeLabelRates.update_async()
+
+    accountTypeSliderRates = ft.Slider(
+        min=1,
+        max=3,
+        divisions=2,
+        height=20,
+        on_change=accountTypeChangedRates,
+    )
+
+    accountLabeledSliderRates = ft.Container(
+        ft.Column(
+            [
+                ft.Row(
+                    [
+                        accountLabelRates,
+                        ft.Text("|"),
+                        accountTypeLabelRates,
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                accountSliderRates,
+                accountTypeSliderRates,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        padding=ft.padding.all(10),
+        bgcolor=ft.colors.GREY_700,
+        border_radius=25,
+    )
+
+    async def yieldReturnOnClick(e: ft.ControlEvent):
+        for row in namesTable.rows:
+            user.percentYieldBalance(
+                row.cells[-1].content.value,
+                float(
+                    yieldReturn.content.controls[0].value.replace(",", "")
+                    if yieldReturn.content.controls[0].value
+                    else 0.0
+                ),
+                accountLabelRates.value,
+                f"{accountTypeLabelRates.value}",
+            )
+        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        await namesTable.update_async()
+
+    yieldReturn = ft.Container(
+        ft.ResponsiveRow(
+            [
+                ft.TextField(
+                    label="Yield Percentage",
+                    col=10,
+                    input_filter=ft.InputFilter(
+                        regex_string=r"^\d+(\.\d*)?$",
+                        allow=True,
+                        replacement_string="",
+                    ),
+                    on_blur=formatNumberOnBlur,
+                    suffix=ft.Text("%"),
+                ),
+                ft.IconButton(
+                    ft.icons.ARROW_FORWARD, col=2, on_click=yieldReturnOnClick
+                ),
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        padding=10,
+    )
+
     ratesTile = ft.ExpansionTile(
         title=ft.Row(
             [
@@ -1056,7 +1171,8 @@ async def getAdminView(page: ft.Page):
             ],
         ),
         subtitle=ft.Text("Set earning rates."),
-        controls=[],
+        controls=[accountLabeledSliderRates, yieldReturn],
+        controls_padding=10,
     )
 
     gradYearField = ft.TextField(
@@ -1078,6 +1194,17 @@ async def getAdminView(page: ft.Page):
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
+    async def purgeSelected(e: ft.ControlEvent):
+        for row in namesTable.rows:
+            if row.selected:
+                user.purgeByEmail(row.cells[-1].content.value)
+        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        await namesTable.update_async()
+
+    purgeSelect = ft.Container(
+        ft.FilledButton("Purge Selected Users", on_click=purgeSelected), padding=10
+    )
+
     miscTile = ft.ExpansionTile(
         title=ft.Row(
             [
@@ -1086,7 +1213,7 @@ async def getAdminView(page: ft.Page):
             ],
         ),
         subtitle=ft.Text("Manage miscellaneous functions."),
-        controls=[purgeSeniors],
+        controls=[purgeSelect, purgeSeniors],
         controls_padding=10,
     )
 

@@ -130,6 +130,14 @@ def purgeClassYear(classYear: int):
     closeConnection(connection, cursor)
 
 
+def purgeByEmail(email: str):
+    connection, cursor = openUsersConnection()
+    sqlDelete = f"DELETE FROM users WHERE email = '{email}';"
+    cursor.execute(sqlDelete)
+    connection.commit()
+    closeConnection(connection, cursor)
+
+
 def setBalance(email: str, pelicoins: float, account: str, accountType: str):
     fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
 
@@ -157,6 +165,25 @@ def depositToBalance(email: str, pelicoins: float, account: str, accountType: st
         sqlUpdateBalance,
         (
             currentUser.__getattribute__(account.lower()).get(accountType) + pelicoins,
+            currentUser.email,
+        ),
+    )
+    connection.commit()
+    closeConnection(connection, cursor)
+
+
+def percentYieldBalance(email: str, percent: float, account: str, accountType: str):
+    currentUser = fetchUserByEmail(email)
+
+    fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
+
+    connection, cursor = openUsersConnection()
+    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
+    cursor.execute(
+        sqlUpdateBalance,
+        (
+            currentUser.__getattribute__(account.lower()).get(accountType)
+            * (1 + (percent / 100)),
             currentUser.email,
         ),
     )
