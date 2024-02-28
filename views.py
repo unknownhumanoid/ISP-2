@@ -270,6 +270,14 @@ async def getSignUpView(page: ft.Page):
 
 async def getAccountsView(page: ft.Page):
     currentUser: user.User = page.session.get("user")
+
+    welcomeText = ft.Container(
+        ft.Text(f"Welcome, {currentUser.name}.", size=28),
+        bgcolor=ft.colors.ON_INVERSE_SURFACE,
+        border_radius=25,
+        padding=10,
+    )
+
     accountBalances = {
         "current": currentUser.current,
         "education": currentUser.education,
@@ -497,6 +505,7 @@ async def getAccountsView(page: ft.Page):
                 [
                     ft.Column(
                         [
+                            welcomeText,
                             pelicoin,
                             balanceText,
                             currentCard,
