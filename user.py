@@ -1,9 +1,8 @@
 import sqlite3 as sqlite3
 
-# connection = sqlite3.connect("assets/data/users.db")
-# cursor = connection.cursor()
-# sqlCreateTable = "CREATE TABLE users (email TEXT, password TEXT, checking REAL, savings REAL, name TEXT, gradYear INTEGER, isBoarder INTEGER, dorm TEXT)"
-# cursor.execute(sqlCreateTable)
+import sqlalchemy
+
+engine = sqlalchemy.create_engine("sqlite:///data/users.db", echo=True)
 
 
 class Account:
