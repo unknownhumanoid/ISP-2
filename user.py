@@ -1,219 +1,213 @@
-import sqlite3 as sqlite3
+import sqlalchemy as sql
+from typing import NamedTuple
 
-import sqlalchemy
+engine = sql.create_engine("sqlite:///data/test.db")
 
-engine = sqlalchemy.create_engine("sqlite:///data/users.db", echo=True)
+# Users
+userMetadata = sql.MetaData()
 
+usersTable = sql.Table(
+    "users",
+    userMetadata,
+    sql.Column("email", sql.Text),
+    sql.Column("password", sql.Text),
+    sql.Column("name", sql.Text),
+    sql.Column("gradYear", sql.Integer),
+    sql.Column("dorm", sql.Text),
+    sql.Column("balances", sql.JSON),
+)
 
-class Account:
-    def __init__(self, email: str, password: str) -> None:
-        self.email = email
-        self.password = password
+User = NamedTuple(
+    "User",
+    [
+        ("email", str),
+        ("password", str),
+        ("name", str),
+        ("dorm", str),
+        ("gradYear", int),
+        ("balances", dict),
+    ],
+)
 
-    def __repr__(self) -> str:
-        return f"Account: {self.email}, {self.password}"
-
-
-class User(Account):
-    def __init__(
-        self,
-        email: str,
-        password: str,
-        name: str,
-        gradYear: int,
-        isBoarder: int,
-        dorm: str,
-        currentCash: float,
-        currentTreasuryBills: float,
-        currentStockIndex: float,
-        educationTreasuryBills: float,
-        educationStockIndex: float,
-        retirementTreasuryBills: float,
-        retirementStockIndex: float,
-    ) -> None:
-        super().__init__(email, password)
-        self.name = name
-        self.gradYear = gradYear
-        self.isBoarder = isBoarder
-        self.dorm = dorm
-        self.current = {
-            "Cash": currentCash,
-            "Treasury Bills": currentTreasuryBills,
-            "Index Fund": currentStockIndex,
-        }
-        self.education = {
-            "Treasury Bills": educationTreasuryBills,
-            "Index Fund": educationStockIndex,
-        }
-        self.retirement = {
-            "Treasury Bills": retirementTreasuryBills,
-            "Index Fund": retirementStockIndex,
-        }
-
-    def __repr__(self) -> str:
-        return f"Account: {self.email, self.password} || User: {self.name} ({self.gradYear}), {'Boarder' if self.isBoarder else 'Day'} in {self.dorm}"
+# user = User(
+#     "test@loomis.org",
+#     "",
+#     "Test",
+#     "",
+#     2024,
+#     {
+#         "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
+#         "education": {"treasury": 0.0, "stocks": 0.0},
+#         "retirement": {"treasury": 0.0, "stocks": 0.0},
+#     },
+# )
 
 
-class Admin(Account):
-    def __init__(
-        self,
-        email: str,
-        password: str,
-        name: str,
-    ) -> None:
-        super().__init__(email, password)
-        self.name = name
+# write
+def insertUser(user: User) -> None:
+    insertStatement = usersTable.insert().values(**user._asdict())
+
+    with engine.connect() as conn:
+        conn.execute(insertStatement)
+        conn.commit()
 
 
-# USER
+def deleteGradYear(gradYear: int):
+    deleteStatement = usersTable.delete().where(usersTable.c.gradYear == gradYear)
+
+    with engine.connect() as conn:
+        conn.execute(deleteStatement)
+        conn.commit()
 
 
-def openUsersConnection():
-    connection = sqlite3.connect("data/users.db")
-    cursor = connection.cursor()
-    return connection, cursor
+def deleteUserByEmail(email: str):
+    deleteStatement = usersTable.delete().where(usersTable.c.email == email)
+
+    with engine.connect() as conn:
+        conn.execute(deleteStatement)
+        conn.commit()
 
 
-def closeConnection(connection: sqlite3.Connection, cursor: sqlite3.Cursor):
-    cursor.close()
-    connection.close()
+def setBalance(email: str, balance: float, account: str, accountType: str):
+    user = fetchUserByEmail(email)
+
+    if not User:
+        return
+
+    user.balances[account][accountType] = balance
+
+    updateStatement = (
+        usersTable.update()
+        .where(usersTable.c.email == email)
+        .values(balances=user.balances)
+    )
+
+    with engine.connect() as conn:
+        conn.execute(updateStatement)
+        conn.commit()
 
 
+def depositToBalance(email: str, balance: float, account: str, accountType: str):
+    user = fetchUserByEmail(email)
+
+    if not User:
+        return
+
+    user.balances[account][accountType] += balance
+
+    updateStatement = (
+        usersTable.update()
+        .where(usersTable.c.email == email)
+        .values(balances=user.balances)
+    )
+
+    with engine.connect() as conn:
+        conn.execute(updateStatement)
+        conn.commit()
+
+
+def yieldToBalance(email: str, percent: float, account: str, accountType: str):
+    user = fetchUserByEmail(email)
+
+    if not User:
+        return
+
+    user.balances[account][accountType] *= 1 + percent / 100
+
+    updateStatement = (
+        usersTable.update()
+        .where(usersTable.c.email == email)
+        .values(balances=user.balances)
+    )
+
+    with engine.connect() as conn:
+        conn.execute(updateStatement)
+        conn.commit()
+
+
+# read
 def fetchUsers() -> list[User]:
-    connection, cursor = openUsersConnection()
-    rows = cursor.execute("SELECT * FROM users").fetchall()
-    closeConnection(connection, cursor)
+    fetchStatement = usersTable.select()
+
+    with engine.connect() as conn:
+        result = conn.execute(fetchStatement)
+        rows = result.fetchall()
+
     return [User(*row) for row in rows]
 
 
 def fetchUserByEmail(email: str) -> User | None:
-    connection, cursor = openUsersConnection()
-    sqlSelectUser = "SELECT * FROM users WHERE email = ?"
-    rows = cursor.execute(sqlSelectUser, (email,)).fetchall()
-    closeConnection(connection, cursor)
-    if rows:
-        return User(*rows[0]) if rows else None
+    fetchStatement = usersTable.select().where(usersTable.c.email == email)
+
+    with engine.connect() as conn:
+        result = conn.execute(fetchStatement)
+        row = result.fetchone()
+
+        return User(*row) if row else None
 
 
-def fetchAccountsDict() -> dict[str, str]:
-    connection, cursor = openUsersConnection()
-    rows = cursor.execute("SELECT email, password FROM users").fetchall()
-    closeConnection(connection, cursor)
-    return dict(rows)
+def authenticateLogin(email: str, password: str) -> bool:
+    user = fetchUserByEmail(email)
+
+    return user.password == password if user else False
 
 
-def isValidUserLogin(account: Account) -> bool:
-    connection, cursor = openUsersConnection()
-    selectPassword = "SELECT password FROM users WHERE email = ?"
-    userPassword = cursor.execute(selectPassword, (account.email,)).fetchall()
-    closeConnection(connection, cursor)
-    try:
-        return account.password == userPassword[0][0]
-    except IndexError:
-        return False
+# Admins
+adminMetadata = sql.MetaData()
+
+adminsTable = sql.Table(
+    "admins",
+    adminMetadata,
+    sql.Column("email", sql.Text),
+    sql.Column("password", sql.Text),
+    sql.Column("name", sql.Text),
+)
+
+Admin = NamedTuple(
+    "Admin",
+    [
+        ("email", str),
+        ("password", str),
+        ("name", str),
+    ],
+)
+
+# admin = Admin(
+#     "test@loomis.org",
+#     "",
+#     "Test",
+# )
 
 
-def appendUser(user: User):
-    connection, cursor = openUsersConnection()
-    sqlInsert = f"INSERT INTO users VALUES ('{user.email}', '{user.password}', '{user.name}', {user.gradYear}, {user.isBoarder}, '{user.dorm}', {user.current['Cash']}, {user.current['Treasury Bills']}, {user.current['Index Fund']}, {user.education['Treasury Bills']}, {user.education['Index Fund']}, {user.retirement['Treasury Bills']}, {user.retirement['Index Fund']})"
-    cursor.execute(sqlInsert)
-    connection.commit()
-    closeConnection(connection, cursor)
+def insertAdmin(admin: Admin) -> None:
+    insertStatement = adminsTable.insert().values(**admin._asdict())
+
+    with engine.connect() as conn:
+        conn.execute(insertStatement)
+        conn.commit()
 
 
-def purgeClassYear(classYear: int):
-    connection, cursor = openUsersConnection()
-    sqlDelete = f"DELETE FROM users WHERE gradYear = {classYear};"
-    cursor.execute(sqlDelete)
-    connection.commit()
-    closeConnection(connection, cursor)
+def fetchAdmins() -> list[Admin]:
+    fetchStatement = adminsTable.select()
 
+    with engine.connect() as conn:
+        result = conn.execute(fetchStatement)
+        rows = result.fetchall()
 
-def purgeByEmail(email: str):
-    connection, cursor = openUsersConnection()
-    sqlDelete = f"DELETE FROM users WHERE email = '{email}';"
-    cursor.execute(sqlDelete)
-    connection.commit()
-    closeConnection(connection, cursor)
-
-
-def setBalance(email: str, pelicoins: float, account: str, accountType: str):
-    fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
-
-    connection, cursor = openUsersConnection()
-    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
-    cursor.execute(
-        sqlUpdateBalance,
-        (
-            pelicoins,
-            email,
-        ),
-    )
-    connection.commit()
-    closeConnection(connection, cursor)
-
-
-def depositToBalance(email: str, pelicoins: float, account: str, accountType: str):
-    currentUser = fetchUserByEmail(email)
-
-    fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
-
-    connection, cursor = openUsersConnection()
-    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
-    cursor.execute(
-        sqlUpdateBalance,
-        (
-            currentUser.__getattribute__(account.lower()).get(accountType) + pelicoins,
-            currentUser.email,
-        ),
-    )
-    connection.commit()
-    closeConnection(connection, cursor)
-
-
-def percentYieldBalance(email: str, percent: float, account: str, accountType: str):
-    currentUser = fetchUserByEmail(email)
-
-    fieldName = f"{account.lower()}{accountType.replace(' ', '')}"
-
-    connection, cursor = openUsersConnection()
-    sqlUpdateBalance = f"UPDATE users SET {fieldName} = ? WHERE email = ?"
-    cursor.execute(
-        sqlUpdateBalance,
-        (
-            currentUser.__getattribute__(account.lower()).get(accountType)
-            * (1 + (percent / 100)),
-            currentUser.email,
-        ),
-    )
-    connection.commit()
-    closeConnection(connection, cursor)
-
-
-# ADMIN
-
-
-def openAdminsConnection():
-    connection = sqlite3.connect("data/admins.db")
-    cursor = connection.cursor()
-    return connection, cursor
+    return [Admin(*row) for row in rows]
 
 
 def fetchAdminByEmail(email: str) -> Admin | None:
-    connection, cursor = openAdminsConnection()
-    sqlSelectAdmin = "SELECT * FROM admins WHERE email = ?"
-    rows = cursor.execute(sqlSelectAdmin, (email,)).fetchall()
-    closeConnection(connection, cursor)
-    if rows:
-        return Admin(*rows[0]) if rows else None
+    fetchStatement = adminsTable.select().where(adminsTable.c.email == email)
+
+    with engine.connect() as conn:
+        result = conn.execute(fetchStatement)
+        row = result.fetchone()
+
+        return Admin(*row) if row else None
 
 
-def isValidAdminLogin(account: Account) -> bool:
-    connection, cursor = openAdminsConnection()
-    selectPassword = "SELECT password FROM admins WHERE email = ?"
-    adminPassword = cursor.execute(selectPassword, (account.email,)).fetchall()
-    closeConnection(connection, cursor)
-    try:
-        return account.password == adminPassword[0][0]
-    except IndexError:
-        return False
+def authenticateLogin(email: str, password: str) -> bool:
+    admin = fetchAdminByEmail(email)
+
+    return admin.password == password if admin else False
