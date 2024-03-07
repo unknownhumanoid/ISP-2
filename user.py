@@ -146,7 +146,7 @@ def fetchUserByEmail(email: str) -> User | None:
         return User(*row) if row else None
 
 
-def authenticateLogin(email: str, password: str) -> bool:
+def authenticateUserLogin(email: str, password: str) -> bool:
     user = fetchUserByEmail(email)
 
     return user.password == password if user else False
@@ -207,7 +207,7 @@ def fetchAdminByEmail(email: str) -> Admin | None:
         return Admin(*row) if row else None
 
 
-def authenticateLogin(email: str, password: str) -> bool:
+def authenticateAdminLogin(email: str, password: str) -> bool:
     admin = fetchAdminByEmail(email)
 
     return admin.password == password if admin else False

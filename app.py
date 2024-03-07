@@ -20,7 +20,7 @@ async def main(page: ft.Page) -> None:
 
     page.title = "Pelicoin Banking"
     page.theme_mode = ft.ThemeMode.DARK
-    page.scroll = ft.ScrollMode.ALWAYS
+    page.scroll = ft.ScrollMode.ADAPTIVE
     page.fonts = {
         "Kayak Light": "fonts/Kayak Sans Light.otf",
         "Kayak Regular": "fonts/Kayak Sans Regular.otf",

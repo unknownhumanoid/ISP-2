@@ -1,5 +1,6 @@
 import flet as ft
-import styles, user
+import styles
+from user import *
 
 
 async def errorDialog(page: ft.Page, titleText: str, actionText: str):
@@ -42,11 +43,10 @@ async def getLogInView(page: ft.Page):
 
     async def logInButtonOnClick(e: ft.ControlEvent):
         emailValue, passwordValue = email.value, password.value
-        account = user.Account(emailValue, passwordValue)
 
-        u = user.fetchUserByEmail(emailValue)
-        if u and user.isValidUserLogin(account):
-            page.session.set("user", u)
+        user = fetchUserByEmail(emailValue)
+        if user and authenticateUserLogin(emailValue, passwordValue):
+            page.session.set("user", user)
             await page.go_async("/accounts")
         else:
             await errorDialog(
@@ -70,11 +70,10 @@ async def getLogInView(page: ft.Page):
 
     async def adminButtonOnClick(e: ft.ControlEvent):
         emailValue, passwordValue = email.value, password.value
-        account = user.Account(emailValue, passwordValue)
 
-        a = user.fetchAdminByEmail(emailValue)
-        if a and user.isValidAdminLogin(account):
-            page.session.set("admin", a)
+        admin = fetchAdminByEmail(emailValue)
+        if admin and authenticateAdminLogin(emailValue, passwordValue):
+            page.session.set("admin", admin)
             await page.go_async("/admin")
         else:
             await errorDialog(
@@ -198,26 +197,23 @@ async def getSignUpView(page: ft.Page):
             )
             return
 
-        if user.fetchUserByEmail(emailValue):
+        if fetchUserByEmail(emailValue):
             await errorDialog(page, "Email Invalid", "This email is already in use.")
             return
 
-        newUser = user.User(
+        newUser = User(
             emailValue,
             passwordValue,
             nameValue,
-            gradYearValue,
-            isBoarderValue,
             dormValue,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
+            gradYearValue,
+            {
+                "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
+                "education": {"treasury": 0.0, "stocks": 0.0},
+                "retirement": {"treasury": 0.0, "stocks": 0.0},
+            },
         )
-        user.appendUser(newUser)
+        insertUser(newUser)
 
         page.session.set("user", newUser)
         await page.go_async("/accounts")
@@ -269,24 +265,18 @@ async def getSignUpView(page: ft.Page):
 
 
 async def getAccountsView(page: ft.Page):
-    currentUser: user.User = page.session.get("user")
+    user: User = page.session.get("user")
 
     welcomeText = ft.Container(
-        ft.Text(f"Welcome, {currentUser.name}.", size=28),
+        ft.Text(f"Welcome, {user.name}.", size=28),
         bgcolor=ft.colors.ON_INVERSE_SURFACE,
         border_radius=25,
         padding=10,
     )
 
-    accountBalances = {
-        "current": currentUser.current,
-        "education": currentUser.education,
-        "retirement": currentUser.retirement,
-    }
-
-    currentBalance = sum(accountBalances.get("current").values())
-    educationBalance = sum(accountBalances.get("education").values())
-    retirementBalance = sum(accountBalances.get("retirement").values())
+    currentBalance = sum(user.balances["current"].values())
+    educationBalance = sum(user.balances["education"].values())
+    retirementBalance = sum(user.balances["retirement"].values())
     balance = currentBalance + educationBalance + retirementBalance
     balanceText = ft.Text(
         value=f"{balance:,.2f} Ᵽ",
@@ -540,9 +530,9 @@ async def getAccountsView(page: ft.Page):
 
 
 async def getCurrentView(page: ft.Page):
-    currentUser: user.User = page.session.get("user")
+    user: User = page.session.get("user")
 
-    currentBalance = sum(currentUser.current.values())
+    currentBalance = sum(user.balances["current"].values())
     currentBalanceText = ft.Text(
         value=f"{currentBalance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
@@ -552,9 +542,9 @@ async def getCurrentView(page: ft.Page):
 
     currentBalanceDetailed = ft.Row(
         [
-            ft.Text(f"Cash: {currentUser.current.get('Cash')}"),
-            ft.Text(f"Treasury Bills: {currentUser.current.get('Treasury Bills')}"),
-            ft.Text(f"Index Fund: {currentUser.current.get('Index Fund')}"),
+            ft.Text(f"Cash: {user.balances['current']['cash']}"),
+            ft.Text(f"Treasury Bills: {user.balances['current']['treasury']}"),
+            ft.Text(f"Index Fund: {user.balances['current']['stocks']}"),
         ]
     )
 
@@ -588,9 +578,9 @@ async def getCurrentView(page: ft.Page):
 
 
 async def getEducationView(page: ft.Page):
-    currentUser: user.User = page.session.get("user")
+    user: User = page.session.get("user")
 
-    educationBalance = sum(currentUser.education.values())
+    educationBalance = sum(user.balances["education"].values())
     educationBalanceText = ft.Text(
         value=f"{educationBalance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
@@ -600,8 +590,8 @@ async def getEducationView(page: ft.Page):
 
     educationBalanceDetailed = ft.Row(
         [
-            ft.Text(f"Treasury Bills: {currentUser.education.get('Treasury Bills')}"),
-            ft.Text(f"Index Fund: {currentUser.education.get('Index Fund')}"),
+            ft.Text(f"Treasury Bills: {user.balances['education']['treasury']}"),
+            ft.Text(f"Index Fund: {user.balances['education']['stocks']}"),
         ]
     )
 
@@ -635,9 +625,9 @@ async def getEducationView(page: ft.Page):
 
 
 async def getRetirementView(page: ft.Page):
-    currentUser: user.User = page.session.get("user")
+    user: User = page.session.get("user")
 
-    retirementBalance = sum(currentUser.retirement.values())
+    retirementBalance = sum(user.balances["retirement"].values())
     retirementBalanceText = ft.Text(
         value=f"{retirementBalance:,.2f} Ᵽ",
         text_align=ft.TextAlign.CENTER,
@@ -647,8 +637,8 @@ async def getRetirementView(page: ft.Page):
 
     retirementBalanceDetailed = ft.Row(
         [
-            ft.Text(f"Treasury Bills: {currentUser.retirement.get('Treasury Bills')}"),
-            ft.Text(f"Index Fund: {currentUser.retirement.get('Index Fund')}"),
+            ft.Text(f"Treasury Bills: {user.balances['retirement']['treasury']}"),
+            ft.Text(f"Index Fund: {user.balances['retirement']['stocks']}"),
         ]
     )
 
@@ -682,27 +672,29 @@ async def getRetirementView(page: ft.Page):
 
 
 async def getAdminView(page: ft.Page):
+    labelToType = {"Cash": "cash", "Treasury Bills": "treasury", "Index Fund": "stocks"}
+
     async def selectChanged(e: ft.ControlEvent):
         e.control.selected = not e.control.selected
         await namesTable.update_async()
 
-    async def getAllNameRows(users: list[user.User], sortBy: str | None = None):
+    async def getAllNameRows(users: list[User], sortBy: str | None = None):
         match sortBy:
             case "name":
                 users.sort(key=lambda u: u.name, reverse=namesTable.sort_ascending)
             case "current":
                 users.sort(
-                    key=lambda u: sum(u.current.values()),
+                    key=lambda u: sum(u.balances["current"].values()),
                     reverse=namesTable.sort_ascending,
                 )
             case "education":
                 users.sort(
-                    key=lambda u: sum(u.education.values()),
+                    key=lambda u: sum(u.balances["education"].values()),
                     reverse=namesTable.sort_ascending,
                 )
             case "retirement":
                 users.sort(
-                    key=lambda u: sum(u.retirement.values()),
+                    key=lambda u: sum(u.balances["retirement"].values()),
                     reverse=namesTable.sort_ascending,
                 )
             case "year":
@@ -719,11 +711,16 @@ async def getAdminView(page: ft.Page):
                         ft.Column(
                             [
                                 ft.Text(
-                                    f"{(sum(u.current.values())):,.2f}",
+                                    f"{(sum(u.balances['current'].values())):,.2f}",
                                     weight=ft.FontWeight.BOLD,
                                 ),
                                 ft.Text(
-                                    str([f"{val:,.2f}" for val in u.current.values()])
+                                    str(
+                                        [
+                                            f"{val:,.2f}"
+                                            for val in u.balances["current"].values()
+                                        ]
+                                    )
                                     .replace("[", "")
                                     .replace("]", "")
                                     .replace("'", ""),
@@ -740,11 +737,16 @@ async def getAdminView(page: ft.Page):
                         ft.Column(
                             [
                                 ft.Text(
-                                    f"{(sum(u.education.values())):,.2f}",
+                                    f"{(sum(u.balances['education'].values())):,.2f}",
                                     weight=ft.FontWeight.BOLD,
                                 ),
                                 ft.Text(
-                                    str([f"{val:,.2f}" for val in u.current.values()])
+                                    str(
+                                        [
+                                            f"{val:,.2f}"
+                                            for val in u.balances["education"].values()
+                                        ]
+                                    )
                                     .replace("[", "")
                                     .replace("]", "")
                                     .replace("'", ""),
@@ -761,11 +763,16 @@ async def getAdminView(page: ft.Page):
                         ft.Column(
                             [
                                 ft.Text(
-                                    f"{(sum(u.retirement.values())):,.2f}",
+                                    f"{(sum(u.balances['retirement'].values())):,.2f}",
                                     weight=ft.FontWeight.BOLD,
                                 ),
                                 ft.Text(
-                                    str([f"{val:,.2f}" for val in u.current.values()])
+                                    str(
+                                        [
+                                            f"{val:,.2f}"
+                                            for val in u.balances["retirement"].values()
+                                        ]
+                                    )
                                     .replace("[", "")
                                     .replace("]", "")
                                     .replace("'", ""),
@@ -789,7 +796,7 @@ async def getAdminView(page: ft.Page):
     async def nameSearchOnChange(e: ft.ControlEvent):
         namesTable.rows = [
             nameRow
-            for nameRow in await getAllNameRows(user.fetchUsers())
+            for nameRow in await getAllNameRows(fetchUsers())
             if e.control.value.lower() in nameRow.cells[0].content.value.lower()
         ]
         await namesTable.update_async()
@@ -805,7 +812,7 @@ async def getAdminView(page: ft.Page):
 
     def onSortFactory(sortBy: str):
         async def new(e: ft.ControlEvent):
-            namesTable.rows = await getAllNameRows(user.fetchUsers(), sortBy)
+            namesTable.rows = await getAllNameRows(fetchUsers(), sortBy)
             namesTable.sort_ascending = not namesTable.sort_ascending
             match sortBy:
                 case "name":
@@ -839,7 +846,7 @@ async def getAdminView(page: ft.Page):
             ),
             ft.DataColumn(ft.Text("Year"), numeric=True, on_sort=onSortFactory("year")),
         ],
-        rows=await getAllNameRows(user.fetchUsers()),
+        rows=await getAllNameRows(fetchUsers()),
         width=styles.FIELD_WIDTH * 2,
         column_spacing=25,
         show_checkbox_column=True,
@@ -930,17 +937,17 @@ async def getAdminView(page: ft.Page):
     async def onAddClick(e: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                user.depositToBalance(
+                depositToBalance(
                     row.cells[-1].content.value,
                     float(
                         addRow.controls[0].value.replace(",", "")
                         if addRow.controls[0].value
                         else 0.0
                     ),
-                    accountLabel.value,
-                    f"{accountTypeLabel.value}",
+                    accountLabel.value.lower(),
+                    f"{labelToType.get(accountTypeLabel.value)}",
                 )
-        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
     addRow = ft.ResponsiveRow(
@@ -966,18 +973,18 @@ async def getAdminView(page: ft.Page):
     async def onSubClick(e: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                user.depositToBalance(
+                depositToBalance(
                     row.cells[-1].content.value,
                     -float(
                         subtractRow.controls[0].value.strip(",")
                         if subtractRow.controls[0].value
                         else 0.0
                     ),
-                    accountLabel.value,
-                    f"{accountTypeLabel.value}",
+                    accountLabel.value.lower(),
+                    f"{labelToType.get(accountTypeLabel.value)}",
                 )
 
-        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
     subtractRow = ft.ResponsiveRow(
@@ -999,18 +1006,18 @@ async def getAdminView(page: ft.Page):
     async def onSetClick(e: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                user.setBalance(
+                setBalance(
                     row.cells[-1].content.value,
                     float(
                         setRow.controls[0].value.strip(",")
                         if setRow.controls[0].value
                         else 0.0
                     ),
-                    accountLabel.value,
-                    f"{accountTypeLabel.value}",
+                    accountLabel.value.lower(),
+                    f"{labelToType.get(accountTypeLabel.value)}",
                 )
 
-        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
     setRow = ft.ResponsiveRow(
@@ -1127,17 +1134,17 @@ async def getAdminView(page: ft.Page):
 
     async def yieldReturnOnClick(e: ft.ControlEvent):
         for row in namesTable.rows:
-            user.percentYieldBalance(
+            yieldToBalance(
                 row.cells[-1].content.value,
                 float(
                     yieldReturn.content.controls[0].value.replace(",", "")
                     if yieldReturn.content.controls[0].value
                     else 0.0
                 ),
-                accountLabelRates.value,
-                f"{accountTypeLabelRates.value}",
+                accountLabelRates.value.lower(),
+                f"{labelToType.get(accountTypeLabelRates.value)}",
             )
-        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
     yieldReturn = ft.Container(
@@ -1182,8 +1189,8 @@ async def getAdminView(page: ft.Page):
     )
 
     async def purgeOnClick(e: ft.ControlEvent):
-        user.purgeClassYear(gradYearField.value)
-        namesTable.rows = await getAllNameRows(user.fetchUsers())
+        deleteGradYear(gradYearField.value)
+        namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
     purgeSeniors = ft.ResponsiveRow(
@@ -1197,8 +1204,8 @@ async def getAdminView(page: ft.Page):
     async def purgeSelected(e: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                user.purgeByEmail(row.cells[-1].content.value)
-        namesTable.rows = await getAllNameRows(user.fetchUsers())
+                deleteUserByEmail(row.cells[-1].content.value)
+        namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
     purgeSelect = ft.Container(
