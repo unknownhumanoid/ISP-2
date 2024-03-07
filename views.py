@@ -1246,12 +1246,12 @@ async def getAdminView(page: ft.Page):
                 [
                     ft.Column(
                         [nameSearch, namesTable],
-                        col=8,
+                        col={"sm": 8},
                     ),
                     ft.Container(
                         controlPanelColumn,
                         bgcolor=ft.colors.ON_INVERSE_SURFACE,
-                        col=4,
+                        col={"sm": 4},
                         padding=10,
                         border_radius=10,
                     ),
