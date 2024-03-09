@@ -36,6 +36,8 @@ async def main(page: ft.Page) -> None:
         "/accounts/current": views.getCurrentView,
         "/accounts/education": views.getEducationView,
         "/accounts/retirement": views.getRetirementView,
+        "/accounts/transfer": views.getRetirementView,
+        "/accounts/transactions": views.getTransactionsView,
         "/admin": views.getAdminView,
     }
 

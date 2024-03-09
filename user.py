@@ -1,7 +1,7 @@
 import sqlalchemy as sql
 from typing import NamedTuple
 
-engine = sql.create_engine("sqlite:///data/test.db")
+engine = sql.create_engine("sqlite:///data/pelicoin.db")
 
 # Users
 userMetadata = sql.MetaData()
@@ -15,6 +15,7 @@ usersTable = sql.Table(
     sql.Column("gradYear", sql.Integer),
     sql.Column("dorm", sql.Text),
     sql.Column("balances", sql.JSON),
+    sql.Column("transactions", sql.JSON),
 )
 
 User = NamedTuple(
@@ -26,24 +27,58 @@ User = NamedTuple(
         ("dorm", str),
         ("gradYear", int),
         ("balances", dict),
+        ("transactions", list),
     ],
 )
 
-# user = User(
-#     "test@loomis.org",
-#     "",
-#     "Test",
-#     "",
-#     2024,
-#     {
-#         "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
-#         "education": {"treasury": 0.0, "stocks": 0.0},
-#         "retirement": {"treasury": 0.0, "stocks": 0.0},
-#     },
-# )
+user = User(
+    email="test",
+    password="",
+    name="Test",
+    dorm="",
+    gradYear=2024,
+    balances={
+        "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
+        "education": {"treasury": 0.0, "stocks": 0.0},
+        "retirement": {"treasury": 0.0, "stocks": 0.0},
+    },
+    transactions=[
+        {
+            "balancesSnapshot": {
+                "current": {"cash": 20.0, "treasury": 0.0, "stocks": 0.0},
+                "education": {"treasury": 0.0, "stocks": 0.0},
+                "retirement": {"treasury": 0.0, "stocks": 0.0},
+            },
+            "transaction": {
+                "executer": "user",
+                "reason": "transfer",
+                "pelicoins": -20.0,
+                "accountFrom": "current",
+                "typeFrom": "cash",
+                "accountTo": "current",
+                "typeTo": "treasury",
+            },
+        },
+        {
+            "balancesSnapshot": {
+                "current": {"cash": 0.0, "treasury": 20.0, "stocks": 0.0},
+                "education": {"treasury": 0.0, "stocks": 0.0},
+                "retirement": {"treasury": 0.0, "stocks": 0.0},
+            },
+            "transaction": {
+                "executer": "admin",
+                "reason": "event",
+                "pelicoins": 100.0,
+                "accountFrom": "",
+                "typeFrom": "",
+                "accountTo": "current",
+                "typeTo": "cash",
+            },
+        },
+    ],
+)
 
 
-# write
 def insertUser(user: User) -> None:
     insertStatement = usersTable.insert().values(**user._asdict())
 
@@ -68,7 +103,60 @@ def deleteUserByEmail(email: str):
         conn.commit()
 
 
-def setBalance(email: str, balance: float, account: str, accountType: str):
+Transaction = NamedTuple(
+    "Transaction",
+    [
+        ("balancesSnapshot", dict),
+        ("executer", str),
+        ("reason", str),
+        ("pelicoins", float),
+        ("accountFrom", str),
+        ("typeFrom", str),
+        ("accountTo", str),
+        ("typeTo", str),
+    ],
+)
+
+transaction = Transaction(
+    balancesSnapshot={
+        "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
+        "education": {"treasury": 0.0, "stocks": 0.0},
+        "retirement": {"treasury": 0.0, "stocks": 0.0},
+    },
+    executer="user",
+    reason="transfer",
+    pelicoins=-20.00,
+    accountFrom="current",
+    typeFrom="cash",
+    accountTo="current",
+    typeTo="treasury",
+)
+
+
+def transactionToJson(transaction: Transaction) -> dict:
+    return {
+        "balancesSnapshot": transaction.balancesSnapshot,
+        "transaction": {
+            "executer": transaction.executer,
+            "reason": transaction.reason,
+            "pelicoins": transaction.pelicoins,
+            "accountFrom": transaction.accountFrom,
+            "typeFrom": transaction.typeFrom,
+            "accountTo": transaction.accountTo,
+            "typeTo": transaction.typeTo,
+        },
+    }
+
+
+def setBalance(
+    email: str,
+    balance: float,
+    account: str,
+    accountType: str,
+    *_,
+    executer: str = "",
+    reason: str = ""
+):
     user = fetchUserByEmail(email)
 
     if not User:
@@ -76,10 +164,15 @@ def setBalance(email: str, balance: float, account: str, accountType: str):
 
     user.balances[account][accountType] = balance
 
+    transaction = Transaction(
+        user.balances, executer, reason, balance, "SET", "SET", account, accountType
+    )
+    user.transactions.append(transactionToJson(transaction))
+
     updateStatement = (
         usersTable.update()
         .where(usersTable.c.email == email)
-        .values(balances=user.balances)
+        .values(balances=user.balances, transactions=user.transactions)
     )
 
     with engine.connect() as conn:
@@ -87,7 +180,15 @@ def setBalance(email: str, balance: float, account: str, accountType: str):
         conn.commit()
 
 
-def depositToBalance(email: str, balance: float, account: str, accountType: str):
+def depositToBalance(
+    email: str,
+    balance: float,
+    account: str,
+    accountType: str,
+    *_,
+    executer: str = "",
+    reason: str = ""
+):
     user = fetchUserByEmail(email)
 
     if not User:
@@ -95,10 +196,22 @@ def depositToBalance(email: str, balance: float, account: str, accountType: str)
 
     user.balances[account][accountType] += balance
 
+    transaction = Transaction(
+        user.balances,
+        executer,
+        reason,
+        balance,
+        "INFUSION",
+        "INFUSION",
+        account,
+        accountType,
+    )
+    user.transactions.append(transactionToJson(transaction))
+
     updateStatement = (
         usersTable.update()
         .where(usersTable.c.email == email)
-        .values(balances=user.balances)
+        .values(balances=user.balances, transactions=user.transactions)
     )
 
     with engine.connect() as conn:
@@ -106,18 +219,40 @@ def depositToBalance(email: str, balance: float, account: str, accountType: str)
         conn.commit()
 
 
-def yieldToBalance(email: str, percent: float, account: str, accountType: str):
+def yieldToBalance(
+    email: str,
+    percent: float,
+    account: str,
+    accountType: str,
+    *_,
+    executer: str = "",
+    reason: str = ""
+):
     user = fetchUserByEmail(email)
 
     if not User:
         return
 
+    gained = user.balances[account][accountType] * (percent / 100)
+
     user.balances[account][accountType] *= 1 + percent / 100
+
+    transaction = Transaction(
+        user.balances,
+        executer,
+        reason,
+        gained,
+        "INFUSION",
+        "INFUSION",
+        account,
+        accountType,
+    )
+    user.transactions.append(transactionToJson(transaction))
 
     updateStatement = (
         usersTable.update()
         .where(usersTable.c.email == email)
-        .values(balances=user.balances)
+        .values(balances=user.balances, transactions=user.transactions)
     )
 
     with engine.connect() as conn:
@@ -125,7 +260,6 @@ def yieldToBalance(email: str, percent: float, account: str, accountType: str):
         conn.commit()
 
 
-# read
 def fetchUsers() -> list[User]:
     fetchStatement = usersTable.select()
 

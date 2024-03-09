@@ -368,114 +368,55 @@ async def getAccountsView(page: ft.Page):
     )
 
     async def enterTransferButtonOnClick(e: ft.ControlEvent):
-        await page.go_async("/transfer")
+        await page.go_async("/accounts/transfer")
 
-    enterTransferButton = ft.IconButton(
-        ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
+    transferCard = ft.OutlinedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Row(
+                            [
+                                ft.Icon(
+                                    ft.icons.COMPARE_ARROWS, color=ft.colors.BLUE_300
+                                ),
+                                ft.Text(value="Transfer"),
+                            ]
+                        ),
+                        padding=ft.padding.all(15),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                width=styles.FIELD_WIDTH / 2.2,
+            ),
+        ),
         on_click=enterTransferButtonOnClick,
-    )
-    transferCard = ft.Card(
-        content=ft.Row(
-            controls=[
-                ft.Container(
-                    ft.Icon(ft.icons.COMPARE_ARROWS, color=ft.colors.BLUE_300),
-                    padding=ft.padding.all(15),
-                ),
-                ft.Text(value="Transfer"),
-                ft.Container(
-                    enterTransferButton, padding=ft.padding.symmetric(horizontal=10)
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            width=styles.FIELD_WIDTH / 2,
-        ),
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
-    balancePieChart = ft.Container(
-        ft.PieChart(
-            [
-                ft.PieChartSection(
-                    title=f"Current",
-                    title_position=1.25,
-                    value=currentBalance,
-                    title_style=styles.ChartTitleStyle,
-                    color=ft.colors.YELLOW_300,
-                    radius=styles.FIELD_WIDTH / 2.25,
-                    badge=ft.Column(
-                        [
-                            ft.Icon(
-                                ft.icons.ATTACH_MONEY,
-                                color=ft.colors.BACKGROUND,
-                                opacity=0.75,
-                            ),
-                            ft.Text(
-                                f"{(currentBalance / balance if balance else 1) * 100:,.0f}%",
-                                color=ft.colors.BACKGROUND,
-                                size=14,
-                                weight=ft.FontWeight.BOLD,
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    async def enterTransactionsButtonOnClick(e: ft.ControlEvent):
+        await page.go_async("/accounts/transactions")
+
+    transactionsCard = ft.OutlinedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Row(
+                            [
+                                ft.Icon(ft.icons.HISTORY, color=ft.colors.BLUE_300),
+                                ft.Text(value="Transactions"),
+                            ]
+                        ),
+                        padding=ft.padding.all(15),
                     ),
-                ),
-                ft.PieChartSection(
-                    title=f"Education",
-                    title_position=1.25,
-                    value=educationBalance,
-                    title_style=styles.ChartTitleStyle,
-                    color=ft.colors.YELLOW_500,
-                    radius=styles.FIELD_WIDTH / 2.25,
-                    badge=ft.Column(
-                        [
-                            ft.Icon(
-                                ft.icons.SCHOOL,
-                                color=ft.colors.BACKGROUND,
-                                opacity=0.75,
-                            ),
-                            ft.Text(
-                                f"{(educationBalance / balance if balance else 1) * 100:,.0f}%",
-                                color=ft.colors.BACKGROUND,
-                                size=14,
-                                weight=ft.FontWeight.BOLD,
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                ),
-                ft.PieChartSection(
-                    title=f"Retirement",
-                    title_position=1.25,
-                    value=retirementBalance,
-                    title_style=styles.ChartTitleStyle,
-                    color=ft.colors.YELLOW_700,
-                    radius=styles.FIELD_WIDTH / 2.25,
-                    badge=ft.Column(
-                        [
-                            ft.Icon(
-                                ft.icons.SAVINGS,
-                                color=ft.colors.BACKGROUND,
-                                opacity=0.75,
-                            ),
-                            ft.Text(
-                                f"{(retirementBalance / balance if balance else 1) * 100:,.0f}%",
-                                color=ft.colors.BACKGROUND,
-                                size=14,
-                                weight=ft.FontWeight.BOLD,
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                ),
-            ],
-            width=styles.FIELD_WIDTH,
-            height=styles.FIELD_WIDTH,
-            center_space_radius=0,
-            sections_space=8,
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                width=styles.FIELD_WIDTH / 2.2,
+            ),
         ),
-        padding=ft.padding.all(50),
+        on_click=enterTransactionsButtonOnClick,
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
     async def backOnClick(e: ft.ControlEvent):
@@ -501,6 +442,10 @@ async def getAccountsView(page: ft.Page):
                             currentCard,
                             educationCard,
                             retirementCard,
+                            ft.Row(
+                                [transferCard, transactionsCard],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                            ),
                             ft.Container(
                                 bgcolor=ft.colors.ON_INVERSE_SURFACE,
                                 height=5,
@@ -513,7 +458,92 @@ async def getAccountsView(page: ft.Page):
                     ),
                     ft.Column(
                         [
-                            balancePieChart,
+                            ft.Container(
+                                ft.PieChart(
+                                    [
+                                        ft.PieChartSection(
+                                            title=f"Current",
+                                            title_position=1.25,
+                                            value=currentBalance,
+                                            title_style=styles.ChartTitleStyle,
+                                            color=ft.colors.YELLOW_300,
+                                            radius=styles.FIELD_WIDTH / 2.25,
+                                            badge=ft.Column(
+                                                [
+                                                    ft.Icon(
+                                                        ft.icons.ATTACH_MONEY,
+                                                        color=ft.colors.BACKGROUND,
+                                                        opacity=0.75,
+                                                    ),
+                                                    ft.Text(
+                                                        f"{(currentBalance / balance if balance else 1) * 100:,.0f}%",
+                                                        color=ft.colors.BACKGROUND,
+                                                        size=14,
+                                                        weight=ft.FontWeight.BOLD,
+                                                    ),
+                                                ],
+                                                alignment=ft.MainAxisAlignment.CENTER,
+                                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            ),
+                                        ),
+                                        ft.PieChartSection(
+                                            title=f"Education",
+                                            title_position=1.25,
+                                            value=educationBalance,
+                                            title_style=styles.ChartTitleStyle,
+                                            color=ft.colors.YELLOW_500,
+                                            radius=styles.FIELD_WIDTH / 2.25,
+                                            badge=ft.Column(
+                                                [
+                                                    ft.Icon(
+                                                        ft.icons.SCHOOL,
+                                                        color=ft.colors.BACKGROUND,
+                                                        opacity=0.75,
+                                                    ),
+                                                    ft.Text(
+                                                        f"{(educationBalance / balance if balance else 1) * 100:,.0f}%",
+                                                        color=ft.colors.BACKGROUND,
+                                                        size=14,
+                                                        weight=ft.FontWeight.BOLD,
+                                                    ),
+                                                ],
+                                                alignment=ft.MainAxisAlignment.CENTER,
+                                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            ),
+                                        ),
+                                        ft.PieChartSection(
+                                            title=f"Retirement",
+                                            title_position=1.25,
+                                            value=retirementBalance,
+                                            title_style=styles.ChartTitleStyle,
+                                            color=ft.colors.YELLOW_700,
+                                            radius=styles.FIELD_WIDTH / 2.25,
+                                            badge=ft.Column(
+                                                [
+                                                    ft.Icon(
+                                                        ft.icons.SAVINGS,
+                                                        color=ft.colors.BACKGROUND,
+                                                        opacity=0.75,
+                                                    ),
+                                                    ft.Text(
+                                                        f"{(retirementBalance / balance if balance else 1) * 100:,.0f}%",
+                                                        color=ft.colors.BACKGROUND,
+                                                        size=14,
+                                                        weight=ft.FontWeight.BOLD,
+                                                    ),
+                                                ],
+                                                alignment=ft.MainAxisAlignment.CENTER,
+                                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            ),
+                                        ),
+                                    ],
+                                    width=styles.FIELD_WIDTH,
+                                    height=styles.FIELD_WIDTH,
+                                    center_space_radius=0,
+                                    sections_space=8,
+                                ),
+                                padding=ft.padding.all(50),
+                            ),
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         col={"sm": 8, "md": 6},
@@ -668,6 +698,45 @@ async def getRetirementView(page: ft.Page):
         ],
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
+    )
+
+
+async def getTransactionsView(page: ft.Page):
+    user: User = page.session.get("user")
+
+    transactionsRows = [ft.DataRow(
+            [ft.DataCell(ft.Text(f"{t["transaction"]["executer"].capitalize()} {t["transaction"]["reason"].capitalize()}")),
+                   ft.DataCell(ft.Text(f"{t["transaction"]["pelicoins"]} Ᵽ")),
+                   ft.DataCell(ft.Text(f"{t["transaction"]["accountFrom"].capitalize()} {t["transaction"]["typeFrom"].capitalize()}" if t["transaction"]["accountFrom"] not in ["INFUSION", "SET"] else t["transaction"]["accountFrom"].capitalize())),
+                   ft.DataCell(ft.Text(f"{t["transaction"]["accountTo"].capitalize()} {t["transaction"]["typeTo"].capitalize()}"))]) for t in user.transactions]
+
+    transactions = ft.DataTable(
+        columns=[
+            ft.DataColumn(ft.Text("Desc.")),
+            ft.DataColumn(ft.Text("Pelicoins"), numeric=True),
+            ft.DataColumn(ft.Text("From")),
+            ft.DataColumn(ft.Text("To")),
+        ],
+        rows=transactionsRows,
+        width=styles.FIELD_WIDTH,
+        column_spacing=25,
+    )
+
+    async def backOnClick(e: ft.ControlEvent):
+        await page.go_async("/accounts")
+
+    return ft.View(
+        "/accounts/transactions",
+        [
+            ft.AppBar(
+                leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=backOnClick),
+                title=ft.Text("Pelicoin Banking"),
+                center_title=True,
+                toolbar_height=50,
+            ),
+            transactions,
+        ],
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
 
@@ -946,6 +1015,7 @@ async def getAdminView(page: ft.Page):
                     ),
                     accountLabel.value.lower(),
                     f"{labelToType.get(accountTypeLabel.value)}",
+                    executer="admin",
                 )
         namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
@@ -982,6 +1052,7 @@ async def getAdminView(page: ft.Page):
                     ),
                     accountLabel.value.lower(),
                     f"{labelToType.get(accountTypeLabel.value)}",
+                    executer="admin",
                 )
 
         namesTable.rows = await getAllNameRows(fetchUsers())
@@ -1015,6 +1086,7 @@ async def getAdminView(page: ft.Page):
                     ),
                     accountLabel.value.lower(),
                     f"{labelToType.get(accountTypeLabel.value)}",
+                    executer="admin",
                 )
 
         namesTable.rows = await getAllNameRows(fetchUsers())
