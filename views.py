@@ -704,11 +704,31 @@ async def getRetirementView(page: ft.Page):
 async def getTransactionsView(page: ft.Page):
     user: User = page.session.get("user")
 
-    transactionsRows = [ft.DataRow(
-            [ft.DataCell(ft.Text(f"{t["transaction"]["executer"].capitalize()} {t["transaction"]["reason"].capitalize()}")),
-                   ft.DataCell(ft.Text(f"{t["transaction"]["pelicoins"]} Ᵽ")),
-                   ft.DataCell(ft.Text(f"{t["transaction"]["accountFrom"].capitalize()} {t["transaction"]["typeFrom"].capitalize()}" if t["transaction"]["accountFrom"] not in ["INFUSION", "SET"] else t["transaction"]["accountFrom"].capitalize())),
-                   ft.DataCell(ft.Text(f"{t["transaction"]["accountTo"].capitalize()} {t["transaction"]["typeTo"].capitalize()}"))]) for t in user.transactions]
+    transactionsRows = [
+        ft.DataRow(
+            [
+                ft.DataCell(
+                    ft.Text(
+                        f"{t['transaction']['executer'].capitalize()} {t['transaction']['reason'].capitalize()}"
+                    )
+                ),
+                ft.DataCell(ft.Text(f"{t['transaction']['pelicoins']} Ᵽ")),
+                ft.DataCell(
+                    ft.Text(
+                        f"{t['transaction']['accountFrom'].capitalize()} {t['transaction']['typeFrom'].capitalize()}"
+                        if t["transaction"]["accountFrom"] not in ["INFUSION", "SET"]
+                        else t["transaction"]["accountFrom"].capitalize()
+                    )
+                ),
+                ft.DataCell(
+                    ft.Text(
+                        f"{t['transaction']['accountTo'].capitalize()} {t['transaction']['typeTo'].capitalize()}"
+                    )
+                ),
+            ]
+        )
+        for t in user.transactions
+    ]
 
     transactions = ft.DataTable(
         columns=[
