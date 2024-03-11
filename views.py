@@ -367,33 +367,6 @@ async def getAccountsView(page: ft.Page):
         ),
     )
 
-    async def enterTransferButtonOnClick(_: ft.ControlEvent):
-        await page.go_async("/accounts/transfer")
-
-    transferCard = ft.OutlinedButton(
-        content=ft.Card(
-            content=ft.Row(
-                controls=[
-                    ft.Container(
-                        ft.Row(
-                            [
-                                ft.Icon(
-                                    ft.icons.COMPARE_ARROWS, color=ft.colors.BLUE_300
-                                ),
-                                ft.Text(value="Transfer"),
-                            ]
-                        ),
-                        padding=ft.padding.all(15),
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                width=styles.FIELD_WIDTH / 2.2,
-            ),
-        ),
-        on_click=enterTransferButtonOnClick,
-        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
-    )
-
     async def enterTransactionsButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/transactions")
 
@@ -412,7 +385,7 @@ async def getAccountsView(page: ft.Page):
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                width=styles.FIELD_WIDTH / 2.2,
+                width=styles.FIELD_WIDTH * 0.9,
             ),
         ),
         on_click=enterTransactionsButtonOnClick,
@@ -526,10 +499,7 @@ async def getAccountsView(page: ft.Page):
                             currentCard,
                             educationCard,
                             retirementCard,
-                            ft.Row(
-                                [transferCard, transactionsCard],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                            ),
+                            transactionsCard,
                             ft.Container(
                                 bgcolor=ft.colors.ON_INVERSE_SURFACE,
                                 height=5,
@@ -794,11 +764,17 @@ async def getTransactionsView(page: ft.Page):
         ft.DataRow(
             [
                 ft.DataCell(
-                    ft.Text(
-                        f"{t['transaction']['executer'].capitalize()} {t['transaction']['reason'].capitalize()}"
+                    ft.Column(
+                        [
+                            ft.Text(f"{t['transaction']['executer'].capitalize()}"),
+                            ft.Text(
+                                f"{t['transaction']['reason'].capitalize()}", size=8
+                            ),
+                        ],
+                        spacing=0,
                     )
                 ),
-                ft.DataCell(ft.Text(f"{t['transaction']['pelicoins']} Ᵽ")),
+                ft.DataCell(ft.Text(f"{t['transaction']['pelicoins']:,.2f} Ᵽ")),
                 ft.DataCell(
                     ft.Text(
                         f"{t['transaction']['accountFrom'].capitalize()} {t['transaction']['typeFrom'].capitalize()}"
@@ -840,9 +816,10 @@ async def getTransactionsView(page: ft.Page):
                 center_title=True,
                 toolbar_height=50,
             ),
-            transactions,
+            ft.ResponsiveRow([transactions]),
         ],
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        scroll=ft.ScrollMode.ALWAYS,
     )
 
 
@@ -1321,6 +1298,8 @@ async def getAdminView(page: ft.Page):
                 ),
                 accountLabelRates.value.lower(),
                 f"{labelToType.get(accountTypeLabelRates.value)}",
+                executer="Admin",
+                reason=f"@ {yieldReturn.content.controls[0].value}%",
             )
         namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
@@ -1436,4 +1415,5 @@ async def getAdminView(page: ft.Page):
                 ]
             ),
         ],
+        scroll=ft.ScrollMode.ALWAYS,
     )
