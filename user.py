@@ -271,6 +271,10 @@ def fetchUsers() -> list[User]:
 
 
 def fetchUserByEmail(email: str) -> User | None:
+    """
+
+    :rtype: object
+    """
     fetchStatement = usersTable.select().where(usersTable.c.email == email)
 
     with engine.connect() as conn:

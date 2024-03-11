@@ -34,10 +34,12 @@ async def main(page: ft.Page) -> None:
         "/signup": views.getSignUpView,
         "/accounts": views.getAccountsView,
         "/accounts/current": views.getCurrentView,
+        "/accounts/current/transfer": views.getTransferViewGenerator("current"),
         "/accounts/education": views.getEducationView,
+        "/accounts/education/transfer": views.getTransferViewGenerator("education"),
         "/accounts/retirement": views.getRetirementView,
-        "/accounts/transfer": views.getRetirementView,
-        "/accounts/transactions": views.getTransactionsView,
+        "/accounts/retirement/transfer": views.getTransferViewGenerator("retirement"),
+        "/accounts/retirement/transactions": views.getTransactionsView,
         "/admin": views.getAdminView,
     }
 

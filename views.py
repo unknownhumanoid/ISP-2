@@ -41,7 +41,7 @@ async def getLogInView(page: ft.Page):
         text_style=styles.TextFieldStyle,
     )
 
-    async def logInButtonOnClick(e: ft.ControlEvent):
+    async def logInButtonOnClick(_: ft.ControlEvent):
         emailValue, passwordValue = email.value, password.value
 
         user = fetchUserByEmail(emailValue)
@@ -59,7 +59,7 @@ async def getLogInView(page: ft.Page):
         on_click=logInButtonOnClick,
     )
 
-    async def signUpButtonOnClick(e: ft.ControlEvent):
+    async def signUpButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/signup")
 
     signUpButton = ft.OutlinedButton(
@@ -68,7 +68,7 @@ async def getLogInView(page: ft.Page):
         on_click=signUpButtonOnClick,
     )
 
-    async def adminButtonOnClick(e: ft.ControlEvent):
+    async def adminButtonOnClick(_: ft.ControlEvent):
         emailValue, passwordValue = email.value, password.value
 
         admin = fetchAdminByEmail(emailValue)
@@ -163,13 +163,12 @@ async def getSignUpView(page: ft.Page):
         text_style=styles.TextFieldStyle,
     )
 
-    async def signUp(e: ft.ControlEvent):
+    async def signUp(_: ft.ControlEvent):
         emailValue = email.value
         passwordValue = password.value
 
         nameValue = nameField.value
         gradYearValue = gradYearField.value
-        isBoarderValue = dormCheck.value
         dormValue = dormField.value
 
         if not nameValue or not gradYearValue:
@@ -206,12 +205,13 @@ async def getSignUpView(page: ft.Page):
             passwordValue,
             nameValue,
             dormValue,
-            gradYearValue,
+            int(gradYearValue),
             {
                 "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
                 "education": {"treasury": 0.0, "stocks": 0.0},
                 "retirement": {"treasury": 0.0, "stocks": 0.0},
             },
+            [],
         )
         insertUser(newUser)
 
@@ -224,7 +224,7 @@ async def getSignUpView(page: ft.Page):
 
     submitButton = ft.ElevatedButton(text="Sign Up", on_click=signUp)
 
-    async def backOnClick(e: ft.ControlEvent):
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/login")
 
     return ft.View(
@@ -292,7 +292,7 @@ async def getAccountsView(page: ft.Page):
         fit=ft.ImageFit.CONTAIN,
     )
 
-    async def enterCurrentButtonOnClick(e: ft.ControlEvent):
+    async def enterCurrentButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/current")
 
     enterCurrentButton = ft.IconButton(
@@ -317,7 +317,7 @@ async def getAccountsView(page: ft.Page):
         ),
     )
 
-    async def enterEducationButtonOnClick(e: ft.ControlEvent):
+    async def enterEducationButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/education")
 
     enterEducationButton = ft.IconButton(
@@ -342,7 +342,7 @@ async def getAccountsView(page: ft.Page):
         ),
     )
 
-    async def enterRetirementButtonOnClick(e: ft.ControlEvent):
+    async def enterRetirementButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/retirement")
 
     enterRetirementButton = ft.IconButton(
@@ -367,7 +367,7 @@ async def getAccountsView(page: ft.Page):
         ),
     )
 
-    async def enterTransferButtonOnClick(e: ft.ControlEvent):
+    async def enterTransferButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/transfer")
 
     transferCard = ft.OutlinedButton(
@@ -394,7 +394,7 @@ async def getAccountsView(page: ft.Page):
         style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
-    async def enterTransactionsButtonOnClick(e: ft.ControlEvent):
+    async def enterTransactionsButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/transactions")
 
     transactionsCard = ft.OutlinedButton(
@@ -419,7 +419,91 @@ async def getAccountsView(page: ft.Page):
         style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
-    async def backOnClick(e: ft.ControlEvent):
+    balancePieChart = ft.PieChart(
+        [
+            ft.PieChartSection(
+                title=f"Current",
+                title_position=1.25,
+                value=currentBalance,
+                title_style=styles.ChartTitleStyle,
+                color=ft.colors.YELLOW_300,
+                radius=styles.FIELD_WIDTH / 2.25,
+                badge=ft.Column(
+                    [
+                        ft.Icon(
+                            ft.icons.ATTACH_MONEY,
+                            color=ft.colors.BACKGROUND,
+                            opacity=0.75,
+                        ),
+                        ft.Text(
+                            f"{(currentBalance / balance if balance else 1) * 100:,.0f}%",
+                            color=ft.colors.BACKGROUND,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+            ),
+            ft.PieChartSection(
+                title=f"Education",
+                title_position=1.25,
+                value=educationBalance,
+                title_style=styles.ChartTitleStyle,
+                color=ft.colors.YELLOW_500,
+                radius=styles.FIELD_WIDTH / 2.25,
+                badge=ft.Column(
+                    [
+                        ft.Icon(
+                            ft.icons.SCHOOL,
+                            color=ft.colors.BACKGROUND,
+                            opacity=0.75,
+                        ),
+                        ft.Text(
+                            f"{(educationBalance / balance if balance else 1) * 100:,.0f}%",
+                            color=ft.colors.BACKGROUND,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+            ),
+            ft.PieChartSection(
+                title=f"Retirement",
+                title_position=1.25,
+                value=retirementBalance,
+                title_style=styles.ChartTitleStyle,
+                color=ft.colors.YELLOW_700,
+                radius=styles.FIELD_WIDTH / 2.25,
+                badge=ft.Column(
+                    [
+                        ft.Icon(
+                            ft.icons.SAVINGS,
+                            color=ft.colors.BACKGROUND,
+                            opacity=0.75,
+                        ),
+                        ft.Text(
+                            f"{(retirementBalance / balance if balance else 1) * 100:,.0f}%",
+                            color=ft.colors.BACKGROUND,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+            ),
+        ],
+        width=styles.FIELD_WIDTH,
+        height=styles.FIELD_WIDTH,
+        center_space_radius=0,
+        sections_space=8,
+    )
+
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/login")
 
     return ft.View(
@@ -459,89 +543,7 @@ async def getAccountsView(page: ft.Page):
                     ft.Column(
                         [
                             ft.Container(
-                                ft.PieChart(
-                                    [
-                                        ft.PieChartSection(
-                                            title=f"Current",
-                                            title_position=1.25,
-                                            value=currentBalance,
-                                            title_style=styles.ChartTitleStyle,
-                                            color=ft.colors.YELLOW_300,
-                                            radius=styles.FIELD_WIDTH / 2.25,
-                                            badge=ft.Column(
-                                                [
-                                                    ft.Icon(
-                                                        ft.icons.ATTACH_MONEY,
-                                                        color=ft.colors.BACKGROUND,
-                                                        opacity=0.75,
-                                                    ),
-                                                    ft.Text(
-                                                        f"{(currentBalance / balance if balance else 1) * 100:,.0f}%",
-                                                        color=ft.colors.BACKGROUND,
-                                                        size=14,
-                                                        weight=ft.FontWeight.BOLD,
-                                                    ),
-                                                ],
-                                                alignment=ft.MainAxisAlignment.CENTER,
-                                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                            ),
-                                        ),
-                                        ft.PieChartSection(
-                                            title=f"Education",
-                                            title_position=1.25,
-                                            value=educationBalance,
-                                            title_style=styles.ChartTitleStyle,
-                                            color=ft.colors.YELLOW_500,
-                                            radius=styles.FIELD_WIDTH / 2.25,
-                                            badge=ft.Column(
-                                                [
-                                                    ft.Icon(
-                                                        ft.icons.SCHOOL,
-                                                        color=ft.colors.BACKGROUND,
-                                                        opacity=0.75,
-                                                    ),
-                                                    ft.Text(
-                                                        f"{(educationBalance / balance if balance else 1) * 100:,.0f}%",
-                                                        color=ft.colors.BACKGROUND,
-                                                        size=14,
-                                                        weight=ft.FontWeight.BOLD,
-                                                    ),
-                                                ],
-                                                alignment=ft.MainAxisAlignment.CENTER,
-                                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                            ),
-                                        ),
-                                        ft.PieChartSection(
-                                            title=f"Retirement",
-                                            title_position=1.25,
-                                            value=retirementBalance,
-                                            title_style=styles.ChartTitleStyle,
-                                            color=ft.colors.YELLOW_700,
-                                            radius=styles.FIELD_WIDTH / 2.25,
-                                            badge=ft.Column(
-                                                [
-                                                    ft.Icon(
-                                                        ft.icons.SAVINGS,
-                                                        color=ft.colors.BACKGROUND,
-                                                        opacity=0.75,
-                                                    ),
-                                                    ft.Text(
-                                                        f"{(retirementBalance / balance if balance else 1) * 100:,.0f}%",
-                                                        color=ft.colors.BACKGROUND,
-                                                        size=14,
-                                                        weight=ft.FontWeight.BOLD,
-                                                    ),
-                                                ],
-                                                alignment=ft.MainAxisAlignment.CENTER,
-                                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                            ),
-                                        ),
-                                    ],
-                                    width=styles.FIELD_WIDTH,
-                                    height=styles.FIELD_WIDTH,
-                                    center_space_radius=0,
-                                    sections_space=8,
-                                ),
+                                balancePieChart,
                                 padding=ft.padding.all(50),
                             ),
                         ],
@@ -578,7 +580,34 @@ async def getCurrentView(page: ft.Page):
         ]
     )
 
-    async def backOnClick(e: ft.ControlEvent):
+    async def enterTransferButtonOnClick(_: ft.ControlEvent):
+        await page.go_async("/accounts/current/transfer")
+
+    transferCard = ft.OutlinedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Row(
+                            [
+                                ft.Icon(
+                                    ft.icons.COMPARE_ARROWS, color=ft.colors.BLUE_300
+                                ),
+                                ft.Text(value="Transfer"),
+                            ]
+                        ),
+                        padding=ft.padding.all(15),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                width=styles.FIELD_WIDTH / 2.2,
+            ),
+        ),
+        on_click=enterTransferButtonOnClick,
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
+    )
+
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts")
 
     return ft.View(
@@ -593,12 +622,12 @@ async def getCurrentView(page: ft.Page):
             ft.Row(
                 [
                     ft.Column(
-                        [currentBalanceText, currentBalanceDetailed],
+                        [currentBalanceText, currentBalanceDetailed, transferCard],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
                 ],
-                vertical_alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
         ],
@@ -625,7 +654,7 @@ async def getEducationView(page: ft.Page):
         ]
     )
 
-    async def backOnClick(e: ft.ControlEvent):
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts")
 
     return ft.View(
@@ -645,7 +674,7 @@ async def getEducationView(page: ft.Page):
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
                 ],
-                vertical_alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
         ],
@@ -672,7 +701,7 @@ async def getRetirementView(page: ft.Page):
         ]
     )
 
-    async def backOnClick(e: ft.ControlEvent):
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts")
 
     return ft.View(
@@ -692,13 +721,70 @@ async def getRetirementView(page: ft.Page):
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
                 ],
-                vertical_alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
         ],
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
     )
+
+
+def getTransferViewGenerator(account: str):
+    async def getTransferView(page: ft.Page):
+        fromCard = ft.Card(
+            ft.Container(
+                ft.Column(
+                    [
+                        ft.Text("Cash"),
+                        ft.Dropdown(
+                            options=ft.dropdown.Option(
+                                "cash",
+                                "Cash",
+                            )
+                        ),
+                    ]
+                )
+            )
+        )
+
+        arrow = ft.Icon(ft.icons.ARROW_DOWNWARD)
+
+        toCard = ft.Card()
+
+        pelicoinsField = ft.TextField()
+
+        submitButton = ft.IconButton(ft.icons.ARROW_FORWARD)
+
+        async def backOnClick(_: ft.ControlEvent):
+            await page.go_async(f"/accounts/{account}")
+
+        return ft.View(
+            f"/accounts/{account}/transfer",
+            [
+                ft.AppBar(
+                    leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=backOnClick),
+                    title=ft.Text("Pelicoin Banking"),
+                    center_title=True,
+                    toolbar_height=50,
+                ),
+                ft.Column(
+                    [
+                        fromCard,
+                        arrow,
+                        toCard,
+                        ft.Row(
+                            [pelicoinsField, submitButton],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    return getTransferView
 
 
 async def getTransactionsView(page: ft.Page):
@@ -742,7 +828,7 @@ async def getTransactionsView(page: ft.Page):
         column_spacing=25,
     )
 
-    async def backOnClick(e: ft.ControlEvent):
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts")
 
     return ft.View(
@@ -874,7 +960,7 @@ async def getAdminView(page: ft.Page):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         )
                     ),
-                    ft.DataCell(ft.Text(u.gradYear)),
+                    ft.DataCell(ft.Text(str(u.gradYear))),
                     ft.DataCell(ft.Text(u.email), visible=False),
                 ],
                 on_select_changed=selectChanged,
@@ -900,7 +986,7 @@ async def getAdminView(page: ft.Page):
     )
 
     def onSortFactory(sortBy: str):
-        async def new(e: ft.ControlEvent):
+        async def new(_: ft.ControlEvent):
             namesTable.rows = await getAllNameRows(fetchUsers(), sortBy)
             namesTable.sort_ascending = not namesTable.sort_ascending
             match sortBy:
@@ -1023,7 +1109,7 @@ async def getAdminView(page: ft.Page):
         e.control.value = f"{float(e.control.value):,.2f}" if e.control.value else ""
         await e.control.update_async()
 
-    async def onAddClick(e: ft.ControlEvent):
+    async def onAddClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
                 depositToBalance(
@@ -1060,7 +1146,7 @@ async def getAdminView(page: ft.Page):
         ]
     )
 
-    async def onSubClick(e: ft.ControlEvent):
+    async def onSubClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
                 depositToBalance(
@@ -1094,7 +1180,7 @@ async def getAdminView(page: ft.Page):
         ],
     )
 
-    async def onSetClick(e: ft.ControlEvent):
+    async def onSetClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
                 setBalance(
@@ -1135,7 +1221,7 @@ async def getAdminView(page: ft.Page):
                 ft.Text("Balances", size=20),
             ],
         ),
-        subtitle=ft.Text("Add, substract, set."),
+        subtitle=ft.Text("Add, subtract, set."),
         controls=[
             accountLabeledSlider,
             ft.Divider(opacity=0),
@@ -1224,7 +1310,7 @@ async def getAdminView(page: ft.Page):
         border_radius=25,
     )
 
-    async def yieldReturnOnClick(e: ft.ControlEvent):
+    async def yieldReturnOnClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             yieldToBalance(
                 row.cells[-1].content.value,
@@ -1280,8 +1366,8 @@ async def getAdminView(page: ft.Page):
         input_filter=ft.NumbersOnlyInputFilter(),
     )
 
-    async def purgeOnClick(e: ft.ControlEvent):
-        deleteGradYear(gradYearField.value)
+    async def purgeOnClick(_: ft.ControlEvent):
+        deleteGradYear(int(gradYearField.value))
         namesTable.rows = await getAllNameRows(fetchUsers())
         await namesTable.update_async()
 
@@ -1293,7 +1379,7 @@ async def getAdminView(page: ft.Page):
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
-    async def purgeSelected(e: ft.ControlEvent):
+    async def purgeSelected(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
                 deleteUserByEmail(row.cells[-1].content.value)
@@ -1322,7 +1408,7 @@ async def getAdminView(page: ft.Page):
         expand=True,
     )
 
-    async def backOnClick(e: ft.ControlEvent):
+    async def backOnClick(_: ft.ControlEvent):
         await page.go_async("/login")
 
     return ft.View(
