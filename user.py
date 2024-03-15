@@ -1,7 +1,12 @@
+import psycopg2
 import sqlalchemy as sql
 from typing import NamedTuple
 
-engine = sql.create_engine("sqlite:///data/pelicoin.db")
+# engine = sql.create_engine("sqlite:///data/pelicoin.db")
+
+engine = sql.create_engine(
+    "postgresql://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/defaultdb?sslmode=require"
+)
 
 # Users
 userMetadata = sql.MetaData()
@@ -271,10 +276,6 @@ def fetchUsers() -> list[User]:
 
 
 def fetchUserByEmail(email: str) -> User | None:
-    """
-
-    :rtype: object
-    """
     fetchStatement = usersTable.select().where(usersTable.c.email == email)
 
     with engine.connect() as conn:
@@ -310,11 +311,11 @@ Admin = NamedTuple(
     ],
 )
 
-# admin = Admin(
-#     "test@loomis.org",
-#     "",
-#     "Test",
-# )
+admin = Admin(
+    "test@loomis.org",
+    "",
+    "Test",
+)
 
 
 def insertAdmin(admin: Admin) -> None:
@@ -349,3 +350,6 @@ def authenticateAdminLogin(email: str, password: str) -> bool:
     admin = fetchAdminByEmail(email)
 
     return admin.password == password if admin else False
+
+
+print(fetchAdmins(), fetchUsers())
