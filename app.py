@@ -12,7 +12,7 @@ async def main(page: ft.Page) -> None:
         global appView
         appView = ft.AppView.WEB_BROWSER
 
-        # await micropip.install("sqlite3")
+        await micropip.install("psycopg2")
 
     if local:
         page.window_width, page.window_height = 400, 850
