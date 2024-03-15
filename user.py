@@ -1,4 +1,3 @@
-import psycopg2
 import sqlalchemy as sql
 from typing import NamedTuple
 
