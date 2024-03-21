@@ -1,14 +1,13 @@
 import sqlalchemy as sql
+from sqlalchemy.ext.asyncio import create_async_engine
 from typing import NamedTuple
 
-# engine = sql.create_engine("sqlite:///data/pelicoin.db")
-
-engine = sql.create_engine(
-    "postgresql+psycopg://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin?sslmode=require"
+engine = create_async_engine(
+    "postgresql+asyncpg://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin"
 )
 
-# engine = sql.create_engine(
-#     "postgresql://localhost/lucaslevine", connect_args={"password": "pelicoin"}
+# engine = create_async_engine(
+#     "postgresql+asyncpg://localhost/lucaslevine", connect_args={"password": "pelicoin"}
 # )
 
 # Users
@@ -87,28 +86,28 @@ user = User(
 )
 
 
-def insertUser(user: User) -> None:
+async def insertUser(user: User) -> None:
     insertStatement = usersTable.insert().values(**user._asdict())
 
-    with engine.connect() as conn:
-        conn.execute(insertStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(insertStatement)
+        await conn.commit()
 
 
-def deleteGradYear(gradYear: int):
+async def deleteGradYear(gradYear: int):
     deleteStatement = usersTable.delete().where(usersTable.c.graduation == gradYear)
 
-    with engine.connect() as conn:
-        conn.execute(deleteStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(deleteStatement)
+        await conn.commit()
 
 
-def deleteUserByEmail(email: str):
+async def deleteUserByEmail(email: str):
     deleteStatement = usersTable.delete().where(usersTable.c.email == email)
 
-    with engine.connect() as conn:
-        conn.execute(deleteStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(deleteStatement)
+        await conn.commit()
 
 
 Transaction = NamedTuple(
@@ -156,7 +155,7 @@ def transactionToJson(transaction: Transaction) -> dict:
     }
 
 
-def setBalance(
+async def setBalance(
     email: str,
     balance: float,
     account: str,
@@ -165,7 +164,7 @@ def setBalance(
     executer: str = "",
     reason: str = ""
 ):
-    user = fetchUserByEmail(email)
+    user = await fetchUserByEmail(email)
 
     if not User:
         return
@@ -183,12 +182,12 @@ def setBalance(
         .values(balances=user.balances, transactions=user.transactions)
     )
 
-    with engine.connect() as conn:
-        conn.execute(updateStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(updateStatement)
+        await conn.commit()
 
 
-def depositToBalance(
+async def depositToBalance(
     email: str,
     balance: float,
     account: str,
@@ -197,7 +196,7 @@ def depositToBalance(
     executer: str = "",
     reason: str = ""
 ):
-    user = fetchUserByEmail(email)
+    user = await fetchUserByEmail(email)
 
     if not User:
         return
@@ -222,12 +221,12 @@ def depositToBalance(
         .values(balances=user.balances, transactions=user.transactions)
     )
 
-    with engine.connect() as conn:
-        conn.execute(updateStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(updateStatement)
+        await conn.commit()
 
 
-def yieldToBalance(
+async def yieldToBalance(
     email: str,
     percent: float,
     account: str,
@@ -236,7 +235,7 @@ def yieldToBalance(
     executer: str = "",
     reason: str = ""
 ):
-    user = fetchUserByEmail(email)
+    user = await fetchUserByEmail(email)
 
     if not User:
         return
@@ -263,33 +262,35 @@ def yieldToBalance(
         .values(balances=user.balances, transactions=user.transactions)
     )
 
-    with engine.connect() as conn:
-        conn.execute(updateStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(updateStatement)
+        await conn.commit()
 
 
-def fetchUsers() -> list[User]:
+async def fetchUsers() -> list[User]:
     fetchStatement = usersTable.select()
 
-    with engine.connect() as conn:
-        result = conn.execute(fetchStatement)
+    engine.connect()
+
+    async with engine.connect() as conn:
+        result = await conn.execute(fetchStatement)
         rows = result.fetchall()
 
     return [User(*row) for row in rows]
 
 
-def fetchUserByEmail(email: str) -> User | None:
+async def fetchUserByEmail(email: str) -> User | None:
     fetchStatement = usersTable.select().where(usersTable.c.email == email)
 
-    with engine.connect() as conn:
-        result = conn.execute(fetchStatement)
+    async with engine.connect() as conn:
+        result = await conn.execute(fetchStatement)
         row = result.fetchone()
 
         return User(*row) if row else None
 
 
-def authenticateUserLogin(email: str, password: str) -> bool:
-    user = fetchUserByEmail(email)
+async def authenticateUserLogin(email: str, password: str) -> bool:
+    user = await fetchUserByEmail(email)
 
     return user.password == password if user else False
 
@@ -321,36 +322,36 @@ admin = Admin(
 )
 
 
-def insertAdmin(admin: Admin) -> None:
+async def insertAdmin(admin: Admin) -> None:
     insertStatement = adminsTable.insert().values(**admin._asdict())
 
-    with engine.connect() as conn:
-        conn.execute(insertStatement)
-        conn.commit()
+    async with engine.connect() as conn:
+        await conn.execute(insertStatement)
+        await conn.commit()
 
 
-def fetchAdmins() -> list[Admin]:
+async def fetchAdmins() -> list[Admin]:
     fetchStatement = adminsTable.select()
 
-    with engine.connect() as conn:
-        result = conn.execute(fetchStatement)
+    async with engine.connect() as conn:
+        result = await conn.execute(fetchStatement)
         rows = result.fetchall()
 
     return [Admin(*row) for row in rows]
 
 
-def fetchAdminByEmail(email: str) -> Admin | None:
+async def fetchAdminByEmail(email: str) -> Admin | None:
     fetchStatement = adminsTable.select().where(adminsTable.c.email == email)
 
-    with engine.connect() as conn:
-        result = conn.execute(fetchStatement)
+    async with engine.connect() as conn:
+        result = await conn.execute(fetchStatement)
         row = result.fetchone()
 
         return Admin(*row) if row else None
 
 
-def authenticateAdminLogin(email: str, password: str) -> bool:
-    admin = fetchAdminByEmail(email)
+async def authenticateAdminLogin(email: str, password: str) -> bool:
+    admin = await fetchAdminByEmail(email)
 
     return admin.password == password if admin else False
 

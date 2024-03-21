@@ -44,8 +44,8 @@ async def getLogInView(page: ft.Page):
     async def logInButtonOnClick(_: ft.ControlEvent):
         emailValue, passwordValue = email.value, password.value
 
-        user = fetchUserByEmail(emailValue)
-        if user and authenticateUserLogin(emailValue, passwordValue):
+        user = await fetchUserByEmail(emailValue)
+        if user and await authenticateUserLogin(emailValue, passwordValue):
             page.session.set("user", user)
             await page.go_async("/accounts")
         else:
@@ -71,8 +71,8 @@ async def getLogInView(page: ft.Page):
     async def adminButtonOnClick(_: ft.ControlEvent):
         emailValue, passwordValue = email.value, password.value
 
-        admin = fetchAdminByEmail(emailValue)
-        if admin and authenticateAdminLogin(emailValue, passwordValue):
+        admin = await fetchAdminByEmail(emailValue)
+        if admin and await authenticateAdminLogin(emailValue, passwordValue):
             page.session.set("admin", admin)
             await page.go_async("/admin")
         else:
@@ -196,7 +196,7 @@ async def getSignUpView(page: ft.Page):
             )
             return
 
-        if fetchUserByEmail(emailValue):
+        if await fetchUserByEmail(emailValue):
             await errorDialog(page, "Email Invalid", "This email is already in use.")
             return
 
@@ -213,7 +213,7 @@ async def getSignUpView(page: ft.Page):
             },
             [],
         )
-        insertUser(newUser)
+        await insertUser(newUser)
 
         page.session.set("user", newUser)
         await page.go_async("/accounts")
@@ -1027,7 +1027,7 @@ async def getAdminView(page: ft.Page):
     async def nameSearchOnChange(e: ft.ControlEvent):
         namesTable.rows = [
             nameRow
-            for nameRow in await getAllNameRows(fetchUsers())
+            for nameRow in await getAllNameRows(await fetchUsers())
             if e.control.value.lower() in nameRow.cells[0].content.value.lower()
         ]
         await namesTable.update_async()
@@ -1043,7 +1043,7 @@ async def getAdminView(page: ft.Page):
 
     def onSortFactory(sortBy: str):
         async def new(_: ft.ControlEvent):
-            namesTable.rows = await getAllNameRows(fetchUsers(), sortBy)
+            namesTable.rows = await getAllNameRows(await fetchUsers(), sortBy)
             namesTable.sort_ascending = not namesTable.sort_ascending
             match sortBy:
                 case "name":
@@ -1077,7 +1077,7 @@ async def getAdminView(page: ft.Page):
             ),
             ft.DataColumn(ft.Text("Year"), numeric=True, on_sort=onSortFactory("year")),
         ],
-        rows=await getAllNameRows(fetchUsers()),
+        rows=await getAllNameRows(await fetchUsers()),
         width=styles.FIELD_WIDTH * 2,
         column_spacing=25,
         show_checkbox_column=True,
@@ -1168,7 +1168,7 @@ async def getAdminView(page: ft.Page):
     async def onAddClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                depositToBalance(
+                await depositToBalance(
                     row.cells[-1].content.value,
                     float(
                         addRow.controls[0].value.replace(",", "")
@@ -1179,7 +1179,7 @@ async def getAdminView(page: ft.Page):
                     f"{labelToType.get(accountTypeLabel.value)}",
                     executer="admin",
                 )
-        namesTable.rows = await getAllNameRows(fetchUsers())
+        namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
     addRow = ft.ResponsiveRow(
@@ -1205,7 +1205,7 @@ async def getAdminView(page: ft.Page):
     async def onSubClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                depositToBalance(
+                await depositToBalance(
                     row.cells[-1].content.value,
                     -float(
                         subtractRow.controls[0].value.strip(",")
@@ -1217,7 +1217,7 @@ async def getAdminView(page: ft.Page):
                     executer="admin",
                 )
 
-        namesTable.rows = await getAllNameRows(fetchUsers())
+        namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
     subtractRow = ft.ResponsiveRow(
@@ -1239,7 +1239,7 @@ async def getAdminView(page: ft.Page):
     async def onSetClick(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                setBalance(
+                await setBalance(
                     row.cells[-1].content.value,
                     float(
                         setRow.controls[0].value.strip(",")
@@ -1251,7 +1251,7 @@ async def getAdminView(page: ft.Page):
                     executer="admin",
                 )
 
-        namesTable.rows = await getAllNameRows(fetchUsers())
+        namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
     setRow = ft.ResponsiveRow(
@@ -1368,7 +1368,7 @@ async def getAdminView(page: ft.Page):
 
     async def yieldReturnOnClick(_: ft.ControlEvent):
         for row in namesTable.rows:
-            yieldToBalance(
+            await yieldToBalance(
                 row.cells[-1].content.value,
                 float(
                     yieldReturn.content.controls[0].value.replace(",", "")
@@ -1380,7 +1380,7 @@ async def getAdminView(page: ft.Page):
                 executer="Admin",
                 reason=f"@ {yieldReturn.content.controls[0].value}%",
             )
-        namesTable.rows = await getAllNameRows(fetchUsers())
+        namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
     yieldReturn = ft.Container(
@@ -1426,7 +1426,7 @@ async def getAdminView(page: ft.Page):
 
     async def purgeOnClick(_: ft.ControlEvent):
         deleteGradYear(int(gradYearField.value))
-        namesTable.rows = await getAllNameRows(fetchUsers())
+        namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
     purgeSeniors = ft.ResponsiveRow(
@@ -1441,7 +1441,7 @@ async def getAdminView(page: ft.Page):
         for row in namesTable.rows:
             if row.selected:
                 deleteUserByEmail(row.cells[-1].content.value)
-        namesTable.rows = await getAllNameRows(fetchUsers())
+        namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
     purgeSelect = ft.Container(
