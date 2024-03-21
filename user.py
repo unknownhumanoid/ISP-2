@@ -5,7 +5,7 @@ from typing import NamedTuple
 # engine = sql.create_engine("sqlite:///data/pelicoin.db")
 
 engine = sql.create_engine(
-    "postgresql://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin?sslmode=require",
+    "postgresql+psycopg://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin?sslmode=require",
     module=psycopg,
 )
 
