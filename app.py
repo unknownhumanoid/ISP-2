@@ -7,12 +7,8 @@ appView = ft.AppView.FLET_APP
 
 async def main(page: ft.Page) -> None:
     if not local:
-        import micropip
-
         global appView
         appView = ft.AppView.WEB_BROWSER
-
-        # await micropip.install("psycopg2-binary")
 
     if local:
         page.window_width, page.window_height = 400, 850
