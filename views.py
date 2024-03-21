@@ -205,7 +205,7 @@ async def getSignUpView(page: ft.Page):
             passwordValue,
             nameValue,
             dormValue,
-            int(gradYearValue),
+            gradYearValue,
             {
                 "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
                 "education": {"treasury": 0.0, "stocks": 0.0},
@@ -295,76 +295,88 @@ async def getAccountsView(page: ft.Page):
     async def enterCurrentButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/current")
 
-    enterCurrentButton = ft.IconButton(
-        ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
-        on_click=enterCurrentButtonOnClick,
-    )
-    currentCard = ft.Card(
-        content=ft.Row(
-            controls=[
-                ft.Container(
-                    ft.Icon(ft.icons.ATTACH_MONEY, color=ft.colors.YELLOW_300),
-                    padding=ft.padding.all(25),
-                ),
-                ft.Text(value="Current"),
-                ft.Text(value=f"{currentBalance:,.2f} Ᵽ", size=18),
-                ft.Container(
-                    enterCurrentButton, padding=ft.padding.symmetric(horizontal=25)
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            width=styles.FIELD_WIDTH,
+    currentCard = ft.ElevatedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Icon(ft.icons.ATTACH_MONEY, color=ft.colors.YELLOW_300),
+                        padding=ft.padding.all(25),
+                    ),
+                    ft.Text(value="Current"),
+                    ft.Text(value=f"{currentBalance:,.2f} Ᵽ", size=18),
+                    ft.Container(
+                        ft.IconButton(
+                            ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
+                            on_click=enterCurrentButtonOnClick,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=25),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                width=styles.FIELD_WIDTH,
+            ),
         ),
+        on_click=enterCurrentButtonOnClick,
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
     async def enterEducationButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/education")
 
-    enterEducationButton = ft.IconButton(
-        ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
-        on_click=enterEducationButtonOnClick,
-    )
-    educationCard = ft.Card(
-        content=ft.Row(
-            controls=[
-                ft.Container(
-                    ft.Icon(ft.icons.SCHOOL, color=ft.colors.YELLOW_500),
-                    padding=ft.padding.all(25),
-                ),
-                ft.Text(value="Education"),
-                ft.Text(value=f"{educationBalance:,.2f} Ᵽ", size=18),
-                ft.Container(
-                    enterEducationButton, padding=ft.padding.symmetric(horizontal=25)
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            width=styles.FIELD_WIDTH,
+    educationCard = ft.ElevatedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Icon(ft.icons.SCHOOL, color=ft.colors.YELLOW_500),
+                        padding=ft.padding.all(25),
+                    ),
+                    ft.Text(value="Education"),
+                    ft.Text(value=f"{educationBalance:,.2f} Ᵽ", size=18),
+                    ft.Container(
+                        ft.IconButton(
+                            ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
+                            on_click=enterEducationButtonOnClick,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=25),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                width=styles.FIELD_WIDTH,
+            ),
         ),
+        on_click=enterEducationButtonOnClick,
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
     async def enterRetirementButtonOnClick(_: ft.ControlEvent):
         await page.go_async("/accounts/retirement")
 
-    enterRetirementButton = ft.IconButton(
-        ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
-        on_click=enterRetirementButtonOnClick,
-    )
-    retirementCard = ft.Card(
-        content=ft.Row(
-            controls=[
-                ft.Container(
-                    ft.Icon(ft.icons.SAVINGS, color=ft.colors.YELLOW_700),
-                    padding=ft.padding.all(25),
-                ),
-                ft.Text(value="Retirement"),
-                ft.Text(value=f"{retirementBalance:,.2f} Ᵽ", size=18),
-                ft.Container(
-                    enterRetirementButton, padding=ft.padding.symmetric(horizontal=25)
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            width=styles.FIELD_WIDTH,
+    retirementCard = ft.ElevatedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Icon(ft.icons.SAVINGS, color=ft.colors.YELLOW_700),
+                        padding=ft.padding.all(25),
+                    ),
+                    ft.Text(value="Retirement"),
+                    ft.Text(value=f"{retirementBalance:,.2f} Ᵽ", size=18),
+                    ft.Container(
+                        ft.IconButton(
+                            ft.icons.ARROW_CIRCLE_RIGHT_OUTLINED,
+                            on_click=enterRetirementButtonOnClick,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=25),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                width=styles.FIELD_WIDTH,
+            ),
         ),
+        on_click=enterRetirementButtonOnClick,
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
     async def enterTransactionsButtonOnClick(_: ft.ControlEvent):
@@ -544,9 +556,9 @@ async def getCurrentView(page: ft.Page):
 
     currentBalanceDetailed = ft.Row(
         [
-            ft.Text(f"Cash: {user.balances['current']['cash']}"),
-            ft.Text(f"Treasury Bills: {user.balances['current']['treasury']}"),
-            ft.Text(f"Index Fund: {user.balances['current']['stocks']}"),
+            ft.Text(f"Cash: {user.balances['current']['cash']:,.2f}"),
+            ft.Text(f"Treasury Bills: {user.balances['current']['treasury']:,.2f}"),
+            ft.Text(f"Index Fund: {user.balances['current']['stocks']:,.2f}"),
         ]
     )
 
@@ -619,9 +631,36 @@ async def getEducationView(page: ft.Page):
 
     educationBalanceDetailed = ft.Row(
         [
-            ft.Text(f"Treasury Bills: {user.balances['education']['treasury']}"),
-            ft.Text(f"Index Fund: {user.balances['education']['stocks']}"),
+            ft.Text(f"Treasury Bills: {user.balances['education']['treasury']:,.2f}"),
+            ft.Text(f"Index Fund: {user.balances['education']['stocks']:,.2f}"),
         ]
+    )
+
+    async def enterTransferButtonOnClick(_: ft.ControlEvent):
+        await page.go_async("/accounts/education/transfer")
+
+    transferCard = ft.OutlinedButton(
+        content=ft.Card(
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Row(
+                            [
+                                ft.Icon(
+                                    ft.icons.COMPARE_ARROWS, color=ft.colors.BLUE_300
+                                ),
+                                ft.Text(value="Transfer"),
+                            ]
+                        ),
+                        padding=ft.padding.all(15),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                width=styles.FIELD_WIDTH / 2.2,
+            ),
+        ),
+        on_click=enterTransferButtonOnClick,
+        style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=15)),
     )
 
     async def backOnClick(_: ft.ControlEvent):
@@ -639,7 +678,7 @@ async def getEducationView(page: ft.Page):
             ft.Row(
                 [
                     ft.Column(
-                        [educationBalanceText, educationBalanceDetailed],
+                        [educationBalanceText, educationBalanceDetailed, transferCard],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
                     )
@@ -666,8 +705,8 @@ async def getRetirementView(page: ft.Page):
 
     retirementBalanceDetailed = ft.Row(
         [
-            ft.Text(f"Treasury Bills: {user.balances['retirement']['treasury']}"),
-            ft.Text(f"Index Fund: {user.balances['retirement']['stocks']}"),
+            ft.Text(f"Treasury Bills: {user.balances['retirement']['treasury']:,.2f}"),
+            ft.Text(f"Index Fund: {user.balances['retirement']['stocks']:,.2f}"),
         ]
     )
 
@@ -701,36 +740,76 @@ async def getRetirementView(page: ft.Page):
 
 
 def getTransferViewGenerator(account: str):
-    async def getTransferView(page: ft.Page):
+    async def getTransferView(page: ft.Page, thisAccount=account):
+        dropdownOptions = (
+            [
+                ft.dropdown.Option("cash", "Cash"),
+                ft.dropdown.Option("treasury", "Treasury Bills"),
+                ft.dropdown.Option("stocks", "Stock Index"),
+            ]
+            if thisAccount == "current"
+            else [
+                ft.dropdown.Option("treasury", "Treasury Bills"),
+                ft.dropdown.Option("stocks", "Stock Index"),
+            ]
+        )
+
+        async def fromChanged(_: ft.ControlEvent):
+            toDropdown.disabled = False
+            toDropdown.value = ""
+            for option in toDropdown.options:
+                option.visible = not option.key == fromDropdown.value
+            await toDropdown.update_async()
+
+        fromDropdown = ft.Dropdown(
+            options=dropdownOptions,
+            on_change=fromChanged,
+            border_radius=10,
+            text_size=20,
+            alignment=ft.alignment.center,
+        )
+
         fromCard = ft.Card(
             ft.Container(
                 ft.Column(
                     [
-                        ft.Text("Cash"),
-                        ft.Dropdown(
-                            options=ft.dropdown.Option(
-                                "cash",
-                                "Cash",
-                            )
-                        ),
+                        fromDropdown,
+                        ft.Text("text"),
                     ]
-                )
+                ),
+                padding=ft.padding.all(5),
             )
         )
 
-        arrow = ft.Icon(ft.icons.ARROW_DOWNWARD)
+        toDropdown = ft.Dropdown(
+            options=dropdownOptions,
+            disabled=True,
+            border_radius=10,
+            text_size=20,
+            alignment=ft.alignment.center,
+        )
 
-        toCard = ft.Card()
+        toCard = ft.Card(
+            ft.Container(
+                ft.Column(
+                    [
+                        toDropdown,
+                        ft.Text("text"),
+                    ]
+                ),
+                padding=ft.padding.all(5),
+            )
+        )
 
         pelicoinsField = ft.TextField()
 
         submitButton = ft.IconButton(ft.icons.ARROW_FORWARD)
 
         async def backOnClick(_: ft.ControlEvent):
-            await page.go_async(f"/accounts/{account}")
+            await page.go_async(f"/accounts/{thisAccount}")
 
         return ft.View(
-            f"/accounts/{account}/transfer",
+            f"/accounts/{thisAccount}/transfer",
             [
                 ft.AppBar(
                     leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=backOnClick),
@@ -741,7 +820,7 @@ def getTransferViewGenerator(account: str):
                 ft.Column(
                     [
                         fromCard,
-                        arrow,
+                        ft.Icon(ft.icons.ARROW_DOWNWARD),
                         toCard,
                         ft.Row(
                             [pelicoinsField, submitButton],
@@ -851,7 +930,7 @@ async def getAdminView(page: ft.Page):
                 )
             case "year":
                 users.sort(
-                    key=lambda u: u.gradYear,
+                    key=lambda u: u.graduation,
                     reverse=namesTable.sort_ascending,
                 )
 
@@ -937,7 +1016,7 @@ async def getAdminView(page: ft.Page):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         )
                     ),
-                    ft.DataCell(ft.Text(str(u.gradYear))),
+                    ft.DataCell(ft.Text(str(u.graduation))),
                     ft.DataCell(ft.Text(u.email), visible=False),
                 ],
                 on_select_changed=selectChanged,

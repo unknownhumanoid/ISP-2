@@ -4,8 +4,12 @@ from typing import NamedTuple
 # engine = sql.create_engine("sqlite:///data/pelicoin.db")
 
 engine = sql.create_engine(
-    "postgresql://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/defaultdb?sslmode=require"
+    "postgresql://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin?sslmode=require"
 )
+
+# engine = sql.create_engine(
+#     "postgresql://localhost/lucaslevine", connect_args={"password": "pelicoin"}
+# )
 
 # Users
 userMetadata = sql.MetaData()
@@ -16,7 +20,7 @@ usersTable = sql.Table(
     sql.Column("email", sql.Text),
     sql.Column("password", sql.Text),
     sql.Column("name", sql.Text),
-    sql.Column("gradYear", sql.Integer),
+    sql.Column("graduation", sql.Text),
     sql.Column("dorm", sql.Text),
     sql.Column("balances", sql.JSON),
     sql.Column("transactions", sql.JSON),
@@ -28,19 +32,19 @@ User = NamedTuple(
         ("email", str),
         ("password", str),
         ("name", str),
+        ("graduation", str),
         ("dorm", str),
-        ("gradYear", int),
         ("balances", dict),
         ("transactions", list),
     ],
 )
 
 user = User(
-    email="test",
+    email="",
     password="",
     name="Test",
+    graduation="2024",
     dorm="",
-    gradYear=2024,
     balances={
         "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
         "education": {"treasury": 0.0, "stocks": 0.0},
@@ -92,7 +96,7 @@ def insertUser(user: User) -> None:
 
 
 def deleteGradYear(gradYear: int):
-    deleteStatement = usersTable.delete().where(usersTable.c.gradYear == gradYear)
+    deleteStatement = usersTable.delete().where(usersTable.c.graduation == gradYear)
 
     with engine.connect() as conn:
         conn.execute(deleteStatement)
@@ -311,7 +315,7 @@ Admin = NamedTuple(
 )
 
 admin = Admin(
-    "test@loomis.org",
+    "",
     "",
     "Test",
 )
@@ -351,4 +355,10 @@ def authenticateAdminLogin(email: str, password: str) -> bool:
     return admin.password == password if admin else False
 
 
-print(fetchAdmins(), fetchUsers())
+# userMetadata.create_all(engine)
+# adminMetadata.create_all(engine)
+
+# insertUser(user)
+# insertAdmin(admin)
+
+# print(fetchUsers())

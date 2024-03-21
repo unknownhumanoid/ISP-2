@@ -16,7 +16,6 @@ async def main(page: ft.Page) -> None:
 
     if local:
         page.window_width, page.window_height = 400, 850
-        await page.window_center_async()
 
     page.title = "Pelicoin Banking"
     page.theme_mode = ft.ThemeMode.DARK
