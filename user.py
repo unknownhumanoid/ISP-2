@@ -1,12 +1,10 @@
 import sqlalchemy as sql
-import psycopg
 from typing import NamedTuple
 
 # engine = sql.create_engine("sqlite:///data/pelicoin.db")
 
 engine = sql.create_engine(
-    "postgresql+psycopg://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin?sslmode=require",
-    module=psycopg,
+    "postgresql+psycopg://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin?sslmode=require"
 )
 
 # engine = sql.create_engine(
