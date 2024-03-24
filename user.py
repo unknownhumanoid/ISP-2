@@ -6,10 +6,6 @@ engine = create_async_engine(
     "mysql+aiomysql://avnadmin:AVNS_xZcwleIEU8MCWe_lx1S@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
 )
 
-# engine = create_async_engine(
-#     "postgresql+asyncpg://localhost/lucaslevine", connect_args={"password": "pelicoin"}
-# )
-
 # Users
 userMetadata = sql.MetaData()
 
