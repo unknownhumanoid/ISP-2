@@ -2,10 +2,11 @@ import sqlalchemy as sql
 from sqlalchemy.ext.asyncio import create_async_engine
 from typing import NamedTuple
 
+USERNAME = "avnadmin"
 PASSWORD = "AVNS_xZcwleIEU8MCWe_lx1S"
 
 engine = create_async_engine(
-    f"mysql+aiomysql://avnadmin:{PASSWORD}@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
+    f"mysql+aiomysql://{USERNAME}:{PASSWORD}@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
 )
 
 # Users
