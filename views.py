@@ -204,8 +204,8 @@ async def getSignUpView(page: ft.Page):
             emailValue,
             passwordValue,
             nameValue,
-            dormValue,
             gradYearValue,
+            dormValue,
             {
                 "current": {"cash": 0.0, "treasury": 0.0, "stocks": 0.0},
                 "education": {"treasury": 0.0, "stocks": 0.0},
@@ -1425,7 +1425,7 @@ async def getAdminView(page: ft.Page):
     )
 
     async def purgeOnClick(_: ft.ControlEvent):
-        deleteGradYear(int(gradYearField.value))
+        await deleteGradYear(int(gradYearField.value))
         namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 
@@ -1440,7 +1440,7 @@ async def getAdminView(page: ft.Page):
     async def purgeSelected(_: ft.ControlEvent):
         for row in namesTable.rows:
             if row.selected:
-                deleteUserByEmail(row.cells[-1].content.value)
+                await deleteUserByEmail(row.cells[-1].content.value)
         namesTable.rows = await getAllNameRows(await fetchUsers())
         await namesTable.update_async()
 

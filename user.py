@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from typing import NamedTuple
 
 engine = create_async_engine(
-    "postgresql+asyncpg://avnadmin:AVNS_NOn1BgV24wx0koEcSzb@loomis-pelicoin.a.aivencloud.com:25375/pelicoin"
+    "mysql+aiomysql://avnadmin:AVNS_xZcwleIEU8MCWe_lx1S@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
 )
 
 # engine = create_async_engine(
@@ -356,10 +356,10 @@ async def authenticateAdminLogin(email: str, password: str) -> bool:
     return admin.password == password if admin else False
 
 
-# userMetadata.create_all(engine)
-# adminMetadata.create_all(engine)
+# syncengine = sql.create_engine(
+#     "mysql+pymysql://avnadmin:AVNS_xZcwleIEU8MCWe_lx1S@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
+# )
 
-# insertUser(user)
-# insertAdmin(admin)
 
-# print(fetchUsers())
+# userMetadata.create_all(syncengine)
+# adminMetadata.create_all(syncengine)
