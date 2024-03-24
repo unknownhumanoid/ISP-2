@@ -2,8 +2,10 @@ import sqlalchemy as sql
 from sqlalchemy.ext.asyncio import create_async_engine
 from typing import NamedTuple
 
+PASSWORD = "AVNS_xZcwleIEU8MCWe_lx1S"
+
 engine = create_async_engine(
-    "mysql+aiomysql://avnadmin:AVNS_xZcwleIEU8MCWe_lx1S@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
+    f"mysql+aiomysql://avnadmin:{PASSWORD}@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
 )
 
 # Users
@@ -158,7 +160,7 @@ async def setBalance(
     accountType: str,
     *_,
     executer: str = "",
-    reason: str = ""
+    reason: str = "",
 ):
     user = await fetchUserByEmail(email)
 
@@ -190,7 +192,7 @@ async def depositToBalance(
     accountType: str,
     *_,
     executer: str = "",
-    reason: str = ""
+    reason: str = "",
 ):
     user = await fetchUserByEmail(email)
 
@@ -229,7 +231,7 @@ async def yieldToBalance(
     accountType: str,
     *_,
     executer: str = "",
-    reason: str = ""
+    reason: str = "",
 ):
     user = await fetchUserByEmail(email)
 
