@@ -2,10 +2,10 @@ import sqlalchemy as sql
 from typing import NamedTuple
 
 USERNAME = "avnadmin"
-PASSWORD = "AVNS_xZcwleIEU8MCWe_lx1S"
+PASSWORD = "AVNS_tVrL4MaJrICGn3cYLxH"
 
 engine = sql.create_engine(
-    f"mysql+pymysql://{USERNAME}:{PASSWORD}@mysql-6781937-pelicoin.a.aivencloud.com:25375/pelicoin"
+    f"postgresql+psycopg://{USERNAME}:{PASSWORD}@loomis-pelicoin.a.aivencloud.com:25375/pelicoin"
 )
 
 # Users
